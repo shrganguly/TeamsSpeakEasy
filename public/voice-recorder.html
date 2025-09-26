@@ -350,7 +350,7 @@
             
             <div class="action-buttons">
                 <button id="editBtn" class="btn btn-secondary">✏️ Edit</button>
-                <button id="insertBtn" class="btn btn-success">✅ Insert to Chat</button>
+                <button id="insertBtn" class="btn btn-success">📤 Insert & Close</button>
                 <button id="recordNewBtn" class="btn btn-primary">🎤 Record New</button>
             </div>
         </div>
@@ -452,9 +452,24 @@
             async initializeTeams() {
                 try {
                     await microsoftTeams.app.initialize();
+                    
+                    // Get Teams context for debugging
+                    const context = await microsoftTeams.app.getContext();
                     console.log('Teams app initialized successfully');
+                    console.log('Teams context:', context);
+                    window.teamsContext = context;
+                    
+                    // Check if we're in a task module
+                    console.log('Task module capabilities:', {
+                        tasks: !!microsoftTeams.tasks,
+                        submitTask: !!(microsoftTeams.tasks && microsoftTeams.tasks.submitTask),
+                        dialog: !!microsoftTeams.dialog,
+                        dialogSubmit: !!(microsoftTeams.dialog && microsoftTeams.dialog.submit)
+                    });
+                    
                 } catch (error) {
                     console.log('Not running in Teams context:', error);
+                    window.teamsContext = null;
                 }
             }
 
@@ -644,8 +659,10 @@
                     return;
                 }
 
-                console.log('Attempting to insert text to chat:', text);
+                console.log('=== INSERT TO CHAT DEBUG ===');
+                console.log('Text to insert:', text);
                 console.log('Teams SDK available:', typeof microsoftTeams !== 'undefined');
+                console.log('microsoftTeams object:', microsoftTeams);
                 console.log('Teams context:', window.teamsContext);
                 
                 const insertBtn = document.getElementById('insertBtn');
@@ -653,123 +670,66 @@
                 insertBtn.innerHTML = '⏳ Inserting...';
                 insertBtn.disabled = true;
 
-                try {
-                    // Method 1: Compose Extension Task Module submission (CORRECT approach)
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
-                        console.log('Trying Teams compose extension submitTask...');
-                        
-                        // This is the correct format for compose extension task submissions
-                        const composePayload = {
-                            composeExtension: {
-                                type: 'result',
-                                attachmentLayout: 'list',
-                                attachments: [
-                                    {
-                                        contentType: 'application/vnd.microsoft.card.adaptive',
-                                        content: {
-                                            type: 'AdaptiveCard',
-                                            version: '1.0',
-                                            body: [
-                                                {
-                                                    type: 'TextBlock',
-                                                    text: text,
-                                                    wrap: true
-                                                }
-                                            ]
-                                        }
-                                    }
-                                ]
-                            }
-                        };
-                        
-                        try {
-                            console.log('Submitting compose extension payload:', composePayload);
-                            microsoftTeams.tasks.submitTask(composePayload);
-                            console.log('Compose extension submit successful');
-                            this.showSuccessMessage('✅ Message inserted into chat!');
-                            return;
-                        } catch (err) {
-                            console.log('Compose extension failed:', err);
-                        }
-                        
-                        // Fallback: Try simple text submission
-                        try {
-                            console.log('Trying simple text submission...');
+                // PRIMARY APPROACH: Insert text into chat compose box and close modal
+                if (typeof microsoftTeams !== 'undefined') {
+                    console.log('Teams SDK detected, inserting text to compose box...');
+                    
+                    try {
+                        // Method 1: Use task submit to return text to compose extension
+                        if (microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
+                            console.log('Submitting text to compose box...');
+                            
+                            // Submit the text - this should insert it into the compose box
                             microsoftTeams.tasks.submitTask(text);
-                            console.log('Simple text submission successful');
-                            this.showSuccessMessage('✅ Message inserted into chat!');
+                            
+                            // Show success message briefly, then the modal will close automatically
+                            this.showSuccessMessage('✅ Text inserted! Modal closing...');
+                            
+                            // The modal will close and text should appear in compose box
                             return;
-                        } catch (err) {
-                            console.log('Simple text submission failed:', err);
                         }
+                    } catch (err) {
+                        console.log('Task submit failed:', err);
                     }
-                } catch (error) {
-                    console.log('Modern dialog.submit failed:', error);
-                }
 
-                try {
-                    // Method 2: Legacy Teams SDK 1.x approach
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
-                        console.log('Trying legacy microsoftTeams.tasks.submitTask...');
-                        
-                        const payloads = [
-                            { message: text },
-                            { text: text },
-                            text,
-                            { data: { message: text } },
-                            { value: { message: text } }
-                        ];
-                        
-                        for (let i = 0; i < payloads.length; i++) {
-                            try {
-                                console.log(`Trying legacy payload ${i + 1}:`, payloads[i]);
-                                await microsoftTeams.tasks.submitTask(payloads[i]);
-                                console.log(`Legacy submit successful with payload ${i + 1}`);
-                                return;
-                            } catch (err) {
-                                console.log(`Legacy payload ${i + 1} failed:`, err);
-                            }
+                    try {
+                        // Method 2: Try dialog submit approach
+                        if (microsoftTeams.dialog && microsoftTeams.dialog.submit) {
+                            console.log('Using dialog submit to return text...');
+                            microsoftTeams.dialog.submit(text);
+                            this.showSuccessMessage('✅ Text inserted! Modal closing...');
+                            return;
                         }
+                    } catch (err) {
+                        console.log('Dialog submit failed:', err);
                     }
-                } catch (error) {
-                    console.log('Legacy tasks.submitTask failed:', error);
+                } else {
+                    console.log('Teams SDK not available');
                 }
 
-                try {
-                    // Method 3: Direct message posting (if available)
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.chat && microsoftTeams.chat.compose) {
-                        console.log('Trying direct message compose...');
-                        await microsoftTeams.chat.compose.sendMessage({ message: text });
-                        console.log('Direct compose successful');
-                        return;
-                    }
-                } catch (error) {
-                    console.log('Direct compose failed:', error);
-                }
-
-                // Ultimate fallback - copy to clipboard and show instructions
-                console.log('All Teams SDK methods failed, falling back to clipboard');
+                // Fallback - copy to clipboard with better instructions
+                console.log('Using clipboard fallback with auto-close instructions');
                 try {
                     await navigator.clipboard.writeText(text);
-                    this.showSuccessMessage('🔄 Message copied to clipboard! Close this window and paste (Ctrl+V) in the Teams chat.');
+                    this.showSuccessMessage('� Message copied to clipboard! Close this window and paste (Ctrl+V) into the chat box, then press Enter.');
                 } catch (error) {
                     console.log('Clipboard API failed, trying execCommand');
                     // Manual selection fallback for older browsers
                     try {
                         document.getElementById('summaryText').select();
                         document.execCommand('copy');
-                        this.showSuccessMessage('🔄 Message selected and copied! Close this window and paste (Ctrl+V) in the Teams chat.');
+                        this.showSuccessMessage('� Message copied! Close this window and paste (Ctrl+V) into the chat box, then press Enter.');
                     } catch (execError) {
                         console.log('execCommand failed:', execError);
-                        this.showErrorMessage('❌ Unable to copy automatically. Please manually copy the text above.');
+                        this.showErrorMessage('❌ Copy failed. Please manually copy the text above, close this window, and paste into chat.');
                         insertBtn.innerHTML = originalText;
                         insertBtn.disabled = false;
                     }
                 } finally {
                     // Always reset button state if not already reset
                     const insertBtn = document.getElementById('insertBtn');
-                    if (insertBtn && insertBtn.innerHTML !== '📤 Insert to Chat') {
-                        insertBtn.innerHTML = '📤 Insert to Chat';
+                    if (insertBtn && insertBtn.innerHTML !== '📤 Insert & Close') {
+                        insertBtn.innerHTML = '📤 Insert & Close';
                         insertBtn.disabled = false;
                     }
                 }
@@ -784,10 +744,15 @@
                 const statusElement = document.getElementById('status');
                 statusElement.innerHTML = `<span style="color: #28a745; font-weight: bold;">${message}</span>`;
                 
-                // Also update the insert button to indicate success
+                // Update the insert button to indicate what happened
                 const insertBtn = document.getElementById('insertBtn');
-                insertBtn.innerHTML = ' Message Ready - Close Window';
-                insertBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                if (message.includes('inserted') || message.includes('closing')) {
+                    insertBtn.innerHTML = '✅ Success - Modal Closing';
+                    insertBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                } else if (message.includes('copied')) {
+                    insertBtn.innerHTML = '📋 Copied - Close & Paste';
+                    insertBtn.style.background = 'linear-gradient(135deg, #17a2b8, #007bff)';
+                }
             }
 
             startNewRecording() {
@@ -799,7 +764,7 @@
                 
                 // Reset insert button
                 const insertBtn = document.getElementById('insertBtn');
-                insertBtn.innerHTML = '✅ Insert to Chat';
+                insertBtn.innerHTML = '📤 Insert & Close';
                 insertBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
             }
 
