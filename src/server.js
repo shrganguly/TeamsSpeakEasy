@@ -538,10 +538,44 @@ app.get('/terms', (req, res) => {
     `);
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'healthy', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: '1.0.8'
+    });
+});
+
+// Keep-alive function to prevent cold starts on Render free tier
+function keepAlive() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const renderUrl = process.env.RENDER_EXTERNAL_URL || 'https://teamsspeakeasy.onrender.com';
+    
+    if (isProduction && renderUrl) {
+        console.log('🔄 Starting keep-alive ping every 10 minutes to prevent cold starts');
+        
+        setInterval(async () => {
+            try {
+                const fetch = require('node-fetch');
+                await fetch(`${renderUrl}/health`);
+                console.log('🏓 Keep-alive ping sent');
+            } catch (error) {
+                console.log('⚠️ Keep-alive ping failed:', error.message);
+            }
+        }, 10 * 60 * 1000); // 10 minutes
+    }
+}
+
 app.listen(PORT, () => {
-    console.log(` Teams Voice Extension Server running on port ${PORT}`);
-    console.log(` Access at: http://localhost:${PORT}`);
-    console.log(` Voice Recorder: http://localhost:${PORT}/voice-recorder`);
+    console.log(`🚀 Teams Voice Extension Server running on port ${PORT}`);
+    console.log(`📍 Access at: http://localhost:${PORT}`);
+    console.log(`🎤 Voice Recorder: http://localhost:${PORT}/voice-recorder`);
+    console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
+    
+    // Start keep-alive after a 2-minute delay (let service fully start)
+    setTimeout(keepAlive, 2 * 60 * 1000);
 });
 
 module.exports = app;
