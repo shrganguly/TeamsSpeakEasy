@@ -481,7 +481,7 @@ Output: "Hey team! Following up on yesterday's Q4 roadmap discussion. Three main
                     }
                 ],
                 max_completion_tokens: 100,
-                temperature: 0.7
+                temperature: 1
             });
             
             const simpleResponse = simpleCompletion.choices[0]?.message?.content?.trim();
