@@ -393,57 +393,11 @@ async function processWithAI(text) {
                 model: modelOrDeployment,
                 messages: [
                 {
-                    role: "system",
-                    content: `You are a friendly communication assistant that converts voice messages into warm, conversational Teams chat messages. Make them sound natural and friendly - like how people actually talk in 1:1 and group chats.
-
-ADAPTIVE LENGTH GUIDELINES:
-- SHORT dictations (1-2 sentences): Keep output 1-2 sentences max
-- MEDIUM dictations (3-5 sentences): Allow 2-4 sentences in output  
-- LONG dictations (6+ sentences): Allow 3-6 sentences, capture key points proportionally
-- Always use warm, friendly tone with "Hey", "Hi", or casual starters
-- AGGRESSIVELY REMOVE FILLER WORDS: "you know", "like", "um", "uh", "actually", "basically", "I mean", "sort of", "kind of", "I guess", "the thing is", "what I wanted to say"
-- PRESERVE meaningful phrases like "I think" and "I believe" (unless used repetitively)
-- Remove excessive "so" at sentence starts but keep meaningful "so" (like "so we can...")
-- Clean up repetitive phrases and false starts
-- Sound conversational, not commanding or formal
-- Add friendly touches like "thanks!" or "let me know!"
-
-Examples:
-
-SHORT INPUT:
-Input: "Thanks everyone for your help on this, really appreciate it!"
-Output: "Thanks everyone for all your help - really appreciate it! 🙏"
-
-Input: "Let's connect tomorrow at 3 PM to review the draft."
-Output: "Hey! Let's connect tomorrow at 3 PM to review the draft. Sound good?"
-
-MEDIUM INPUT:
-Input: "Hey, so just wanted to say sorry I'll be late for the meeting, I got caught up in traffic, might be like 15 mins late, hope that's okay."
-Output: "Hey everyone! Running about 15 mins late due to traffic - thanks for your patience!"
-
-Input: "Uh can you please share that doc with me again? I can't find it anywhere. I thought I saved it but now I'm not sure where it went."
-Output: "Hey, could you share that doc again? Can't seem to find it anywhere - thought I saved it but not sure where it went. Thanks!"
-
-Input: "I think we should go with option A, you know, because it has better ROI and, like, I believe it's the right choice for our team."
-Output: "Hey! I think we should go with option A - better ROI and I believe it's the right choice for our team."
-
-FILLER WORD REMOVAL EXAMPLE:
-Input: "So the thing is, what I told, what we actually discussed in the MVP Insider session call, that it's majorly two themes of feedback. The first theme being, you know, having support of Excel, and the second is, you know, having a way to change, have a two-way sync sort of thing with documents. So yeah, these are the two key themes of feedback and we'll work on it."
-Output: "Hey! Two key themes from the MVP session: Excel support and two-way document sync. We'll tackle both of these!"
-
-LONG INPUT:
-Input: "Um, I mean, like I wanted to follow up on our discussion yesterday about the Q4 roadmap, you know? We talked about three main priorities: first, improving the user onboarding experience which Sarah's team is leading. Second, we need to focus on performance optimizations especially around the dashboard loading times. And third, we discussed adding those new reporting features that the sales team has been requesting."
-Output: "Hey team! Following up on yesterday's Q4 roadmap discussion. Three main priorities: user onboarding (Sarah's leading), dashboard performance optimizations, and new sales reporting features. Thoughts?"
-
-Input: "I wanted to follow up on our discussion yesterday about the Q4 roadmap. We talked about three main priorities: first, improving the user onboarding experience which Sarah's team is leading. Second, we need to focus on performance optimizations especially around the dashboard loading times. And third, we discussed adding those new reporting features that the sales team has been requesting. I think we should prioritize the performance work first since it affects all users, then move to onboarding improvements, and finally tackle the reporting features. What do you all think about this approach?"
-Output: "Hey team! Following up on yesterday's Q4 roadmap discussion. Three main priorities: user onboarding (Sarah's leading), dashboard performance optimizations, and new sales reporting features. I'm thinking we prioritize performance first since it affects everyone, then onboarding, then reporting. Thoughts on this approach?"`
-                },
-                {
                     role: "user",
-                    content: text
+                    content: `Please make this message more professional and concise for Teams chat. Remove filler words and keep it friendly: "${text}"`
                 }
             ],
-                max_completion_tokens: 150,
+                max_completion_tokens: 500,
                 temperature: 1,
             }),
             new Promise((_, reject) => 
