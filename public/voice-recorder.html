@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.8 | Powered by Azure OpenAI | fetchTask: true
+            🎤 Speak Easy v1.0.9 | Manual Insert Testing | fetchTask: true
         </div>
     </div>
 
@@ -838,26 +838,50 @@
                 // Hide processing section
                 document.getElementById('processingSection').classList.remove('visible');
                 
-                // Show result with manual controls
+                // Auto-copy to clipboard and show simple instructions
+                let copyStatus = '';
+                try {
+                    await navigator.clipboard.writeText(message);
+                    copyStatus = '✅ Already copied to clipboard!';
+                } catch (error) {
+                    copyStatus = '⚠️ Manual copy needed';
+                }
+                
+                // Show result with clear copy instructions
                 const resultHTML = `
                     <div class="result-section" style="text-align: center; padding: 20px;">
                         <h3 style="color: #6264A7; margin-bottom: 15px;">✅ Your message is ready!</h3>
                         
-                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #6264A7;">
-                            <strong>Processed message:</strong><br>
-                            <div style="margin-top: 8px; font-style: italic; color: #333;">"${message}"</div>
+                        <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin: 15px 0; border: 2px solid #6264A7;">
+                            <div style="font-weight: bold; color: #6264A7; margin-bottom: 10px;">${copyStatus}</div>
+                            <div style="background: white; padding: 15px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #6264A7; text-align: left;">
+                                <strong style="color: #6264A7;">Your processed message:</strong><br><br>
+                                <div style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.4; color: #333; font-style: italic;">
+                                    "${message}"
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                            <strong>📝 How to use:</strong><br>
+                            <div style="margin-top: 8px; font-size: 13px; line-height: 1.4;">
+                                1. <strong>Close this window</strong> (click X or press Escape)<br>
+                                2. <strong>Click in the Teams chat box</strong><br>
+                                3. <strong>Paste with Ctrl+V</strong><br>
+                                4. <strong>Press Enter to send</strong>
+                            </div>
                         </div>
                         
                         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                            <button id="manualInsertBtn" class="action-button" style="background: #6264A7; color: white; padding: 12px 20px;">
-                                📝 Insert to Chat
+                            <button id="manualCopyBtn" class="action-button" style="background: #6264A7; color: white; padding: 12px 20px; font-weight: bold;">
+                                � Copy Again
                             </button>
-                            <button id="manualCopyBtn" class="action-button" style="background: #666; color: white; padding: 12px 20px;">
-                                📋 Copy to Clipboard
+                            <button id="closeBtn" class="action-button" style="background: #28a745; color: white; padding: 12px 20px;">
+                                ✅ Close & Paste
                             </button>
                         </div>
                         
-                        <div id="insertStatus" style="margin-top: 10px; font-size: 12px;"></div>
+                        <div id="copyStatus" style="margin-top: 10px; font-size: 12px; color: #6264A7;"></div>
                     </div>
                 `;
                 
@@ -866,18 +890,22 @@
                 container.innerHTML = resultHTML + container.querySelector('div[style*="text-align: center; margin-top: 20px"]').outerHTML;
                 
                 // Add event listeners
-                document.getElementById('manualInsertBtn').addEventListener('click', () => {
-                    this.testInsertToChat(message);
-                });
-                
                 document.getElementById('manualCopyBtn').addEventListener('click', async () => {
                     try {
                         await navigator.clipboard.writeText(message);
-                        document.getElementById('insertStatus').innerHTML = '✅ Copied to clipboard!';
+                        document.getElementById('copyStatus').innerHTML = '✅ Copied! Now paste in Teams chat.';
                         document.getElementById('manualCopyBtn').textContent = '✅ Copied!';
                     } catch (error) {
-                        document.getElementById('insertStatus').innerHTML = '❌ Copy failed';
+                        document.getElementById('copyStatus').innerHTML = '❌ Copy failed - select text above manually';
                     }
+                });
+                
+                document.getElementById('closeBtn').addEventListener('click', () => {
+                    // Close the modal
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
+                        microsoftTeams.tasks.submitTask(null); // Close modal
+                    }
+                    window.close(); // Fallback close
                 });
             }
             
