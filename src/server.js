@@ -30,40 +30,65 @@ adapter.onTurnError = async (context, error) => {
 const bot = {
     async run(context) {
         // Handle task module submissions and other bot activities
+        console.log('=== BOT ACTIVITY DEBUG ===');
+        console.log('Activity type:', context.activity.type);
+        console.log('Activity name:', context.activity.name);
+        console.log('Full activity:', JSON.stringify(context.activity, null, 2));
+        
         if (context.activity.type === 'invoke') {
-            if (context.activity.name === 'task/submit') {
-                // Handle voice message submission
-                const data = context.activity.value?.data || context.activity.value;
-                const message = data?.message || data?.value?.message || 'Voice message processed';
-                
-                console.log('Task submit received:', JSON.stringify(data, null, 2));
-                
-                // Return the message to be inserted into the compose area
+            if (context.activity.name === 'composeExtension/fetchTask') {
+                console.log('=== FETCH TASK HANDLER ===');
+                // Return task module configuration
                 return {
                     status: 200,
                     body: {
-                        composeExtension: {
-                            type: 'result',
-                            attachmentLayout: 'list',
-                            attachments: [
-                                {
-                                    contentType: 'application/vnd.microsoft.card.adaptive',
-                                    content: {
-                                        type: 'AdaptiveCard',
-                                        version: '1.0',
-                                        body: [
-                                            {
-                                                type: 'TextBlock',
-                                                text: message,
-                                                wrap: true
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
+                        task: {
+                            type: 'continue',
+                            value: {
+                                title: "🎤 Speak Easy - Record Voice Message",
+                                height: "large", 
+                                width: "large",
+                                url: "https://teamsspeakeasy.onrender.com/voice-recorder"
+                            }
                         }
                     }
                 };
+            }
+            
+            if (context.activity.name === 'task/submit') {
+                console.log('=== TASK SUBMIT HANDLER ===');
+                const submittedData = context.activity.value || {};
+                const message = submittedData.message || submittedData;
+                
+                console.log('Submitted data:', JSON.stringify(submittedData, null, 2));
+                console.log('Extracted message:', message);
+                
+                // Try different response formats for compose extensions
+                const responses = [
+                    // Format 1: Simple text response
+                    {
+                        status: 200,
+                        body: typeof message === 'string' ? message : message.toString()
+                    },
+                    // Format 2: Compose extension with text/plain
+                    {
+                        status: 200,
+                        body: {
+                            composeExtension: {
+                                type: 'result',
+                                attachmentLayout: 'list',
+                                attachments: [{
+                                    contentType: 'text/plain',
+                                    content: typeof message === 'string' ? message : message.toString()
+                                }]
+                            }
+                        }
+                    }
+                ];
+                
+                // Use the second format (compose extension)
+                console.log('Returning response:', JSON.stringify(responses[1], null, 2));
+                return responses[1];
             }
         }
         
@@ -139,13 +164,15 @@ app.post('/api/task-submit', express.json(), (req, res) => {
             });
         }
 
-        // For Teams task modules, we need to return the result in a specific format
-        // This will be handled by the Teams SDK on the client side
+        // For compose extensions, return the text directly to be inserted
         res.json({
-            success: true,
-            result: {
-                type: 'message',
-                message: message.trim()
+            composeExtension: {
+                type: "result", 
+                attachmentLayout: "list",
+                attachments: [{
+                    contentType: "text/plain",
+                    content: message.trim()
+                }]
             }
         });
         
