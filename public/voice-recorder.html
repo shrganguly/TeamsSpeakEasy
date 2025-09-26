@@ -419,6 +419,11 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Version Display -->
+        <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+            🎤 Speak Easy v1.0.8 | Powered by Azure OpenAI | fetchTask: true
+        </div>
     </div>
 
     <script>
@@ -728,19 +733,28 @@
                 
                 // Try multiple Teams SDK approaches
                 if (typeof microsoftTeams !== 'undefined') {
+                    console.log('=== AUTO-SUBMIT DEBUG v1.0.8 ===');
                     console.log('Auto-submitting message:', message);
                     console.log('Teams SDK capabilities:', {
                         tasks: !!microsoftTeams.tasks,
                         submitTask: !!(microsoftTeams.tasks && microsoftTeams.tasks.submitTask),
-                        dialog: !!microsoftTeams.dialog
+                        dialog: !!microsoftTeams.dialog,
+                        teamsVersion: microsoftTeams.version || 'unknown'
                     });
+                    console.log('Window location:', window.location.href);
+                    console.log('User agent:', navigator.userAgent);
                     
                     // Method 1: Try direct text submission (most reliable for compose extensions)
                     try {
                         if (microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
                             console.log('Attempting direct text submission...');
+                            console.log('Calling microsoftTeams.tasks.submitTask with:', message);
                             microsoftTeams.tasks.submitTask(message);
-                            console.log('Direct submission successful');
+                            console.log('Direct submission call completed - waiting for Teams response');
+                            
+                            // Wait a moment to see if it worked
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            console.log('Direct text submission completed');
                             return; // Modal should close and text should appear in chat
                         }
                     } catch (err) {
@@ -786,18 +800,22 @@
                 console.log('All Teams methods failed, using clipboard fallback');
                 try {
                     await navigator.clipboard.writeText(message);
-                    this.updateProcessingStatus('📋 Copied to clipboard!', 'Close this window and paste (Ctrl+V) in chat');
+                    this.updateProcessingStatus('📋 Copied to clipboard!', 'Close this window and paste (Ctrl+V) in the chat box');
                     
-                    // Auto-close after 5 seconds with clear instructions
+                    // Show a visual confirmation
+                    console.log('Message copied to clipboard:', message);
+                    
+                    // Auto-close after 4 seconds with clear instructions
                     setTimeout(() => {
+                        console.log('Auto-closing modal after clipboard copy');
                         if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
                             microsoftTeams.tasks.submitTask(null); // Close modal
                         }
                         window.close(); // Fallback close
-                    }, 5000);
+                    }, 4000);
                 } catch (error) {
                     console.error('Clipboard failed too:', error);
-                    this.updateProcessingStatus('❌ Unable to insert', 'Please manually copy the text above and paste in chat');
+                    this.updateProcessingStatus('❌ Teams integration failed', 'Try refreshing Teams or use web browser version');
                 }
             }
 
