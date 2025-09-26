@@ -645,57 +645,107 @@
                 }
 
                 console.log('Attempting to insert text to chat:', text);
+                console.log('Teams SDK available:', typeof microsoftTeams !== 'undefined');
+                console.log('Teams context:', window.teamsContext);
                 
+                const insertBtn = document.getElementById('insertBtn');
+                const originalText = insertBtn.innerHTML;
+                insertBtn.innerHTML = '⏳ Inserting...';
+                insertBtn.disabled = true;
+
                 try {
-                    // Method 1: Try the new SDK approach
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.dialog) {
-                        console.log('Trying microsoftTeams.dialog.submit...');
-                        await microsoftTeams.dialog.submit({
-                            message: text
-                        });
-                        console.log('Dialog submit successful');
-                        return;
+                    // Method 1: Modern Teams SDK 2.x approach
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.dialog && microsoftTeams.dialog.submit) {
+                        console.log('Trying modern microsoftTeams.dialog.submit...');
+                        
+                        // Try different payload formats
+                        const payloads = [
+                            { message: text },
+                            { text: text },
+                            text,
+                            { data: { message: text } },
+                            { value: { message: text } }
+                        ];
+                        
+                        for (let i = 0; i < payloads.length; i++) {
+                            try {
+                                console.log(`Trying payload ${i + 1}:`, payloads[i]);
+                                await microsoftTeams.dialog.submit(payloads[i]);
+                                console.log(`Dialog submit successful with payload ${i + 1}`);
+                                return;
+                            } catch (err) {
+                                console.log(`Payload ${i + 1} failed:`, err);
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.log('Teams dialog.submit failed:', error);
+                    console.log('Modern dialog.submit failed:', error);
                 }
 
                 try {
-                    // Method 2: Try the legacy tasks API
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                        console.log('Trying microsoftTeams.tasks.submitTask...');
-                        await microsoftTeams.tasks.submitTask({
-                            message: text
-                        });
-                        console.log('Tasks submitTask successful');
-                        return;
+                    // Method 2: Legacy Teams SDK 1.x approach
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
+                        console.log('Trying legacy microsoftTeams.tasks.submitTask...');
+                        
+                        const payloads = [
+                            { message: text },
+                            { text: text },
+                            text,
+                            { data: { message: text } },
+                            { value: { message: text } }
+                        ];
+                        
+                        for (let i = 0; i < payloads.length; i++) {
+                            try {
+                                console.log(`Trying legacy payload ${i + 1}:`, payloads[i]);
+                                await microsoftTeams.tasks.submitTask(payloads[i]);
+                                console.log(`Legacy submit successful with payload ${i + 1}`);
+                                return;
+                            } catch (err) {
+                                console.log(`Legacy payload ${i + 1} failed:`, err);
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.log('Teams tasks.submitTask failed:', error);
+                    console.log('Legacy tasks.submitTask failed:', error);
                 }
 
                 try {
-                    // Method 3: Try direct text submission
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                        console.log('Trying direct text submission...');
-                        await microsoftTeams.tasks.submitTask(text);
-                        console.log('Direct text submission successful');
+                    // Method 3: Direct message posting (if available)
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.chat && microsoftTeams.chat.compose) {
+                        console.log('Trying direct message compose...');
+                        await microsoftTeams.chat.compose.sendMessage({ message: text });
+                        console.log('Direct compose successful');
                         return;
                     }
                 } catch (error) {
-                    console.log('Direct text submission failed:', error);
+                    console.log('Direct compose failed:', error);
                 }
 
                 // Ultimate fallback - copy to clipboard and show instructions
+                console.log('All Teams SDK methods failed, falling back to clipboard');
                 try {
                     await navigator.clipboard.writeText(text);
-                    this.showSuccessMessage(' Message copied to clipboard! Close this window and paste (Ctrl+V) in the Teams chat.');
+                    this.showSuccessMessage('🔄 Message copied to clipboard! Close this window and paste (Ctrl+V) in the Teams chat.');
                 } catch (error) {
+                    console.log('Clipboard API failed, trying execCommand');
                     // Manual selection fallback for older browsers
-                    document.getElementById('summaryText').select();
-                    document.execCommand('copy');
-                    this.showSuccessMessage(' Message selected and copied! Close this window and paste (Ctrl+V) in the Teams chat.');
+                    try {
+                        document.getElementById('summaryText').select();
+                        document.execCommand('copy');
+                        this.showSuccessMessage('🔄 Message selected and copied! Close this window and paste (Ctrl+V) in the Teams chat.');
+                    } catch (execError) {
+                        console.log('execCommand failed:', execError);
+                        this.showErrorMessage('❌ Unable to copy automatically. Please manually copy the text above.');
+                        insertBtn.innerHTML = originalText;
+                        insertBtn.disabled = false;
+                    }
                 }
+            }
+
+            showErrorMessage(message) {
+                const statusElement = document.getElementById('status');
+                statusElement.innerHTML = `<span style="color: #dc3545; font-weight: bold;">${message}</span>`;
             }
 
             showSuccessMessage(message) {
