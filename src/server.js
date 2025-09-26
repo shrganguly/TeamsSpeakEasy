@@ -136,6 +136,42 @@ app.post('/test-ai', express.json(), async (req, res) => {
     }
 });
 
+// Simple Azure OpenAI test endpoint
+app.get('/test-azure-simple', async (req, res) => {
+    try {
+        console.log('=== SIMPLE AZURE OPENAI TEST ===');
+        const { OpenAI } = require('openai');
+        
+        const openai = new OpenAI({
+            apiKey: process.env.AZURE_OPENAI_API_KEY,
+            baseURL: `${process.env.AZURE_OPENAI_ENDPOINT}openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT_NAME}`,
+            defaultQuery: { 'api-version': '2024-02-01' },
+            defaultHeaders: {
+                'api-key': process.env.AZURE_OPENAI_API_KEY,
+            },
+        });
+        
+        const response = await openai.chat.completions.create({
+            model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+            messages: [{ role: 'user', content: 'Say hello world' }],
+            max_tokens: 10
+        });
+        
+        res.json({
+            success: true,
+            response: response.choices[0]?.message?.content,
+            fullResponse: response
+        });
+    } catch (error) {
+        console.error('Simple Azure test error:', error);
+        res.status(500).json({
+            error: error.message,
+            type: error.constructor.name,
+            code: error.code
+        });
+    }
+});
+
 // Configure multer for file uploads
 const upload = multer({ 
     storage: multer.memoryStorage(),
@@ -419,12 +455,42 @@ Output: "Hey team! Following up on yesterday's Q4 roadmap discussion. Three main
         console.log('✅ Azure OpenAI API call completed in', elapsedTime, 'ms');
         console.log('Response choices count:', completion.choices?.length || 0);
 
-        // Extract the response content
+        // Extract and validate the response content
+        console.log('Full completion object:', JSON.stringify(completion, null, 2));
+        
         const responseContent = completion.choices[0]?.message?.content?.trim();
-        console.log('Response content:', responseContent?.substring(0, 100) + '...');
+        console.log('Raw response content:', JSON.stringify(responseContent));
+        console.log('Response content preview:', responseContent?.substring(0, 200) || 'EMPTY');
         console.log('Response length:', responseContent?.length || 0);
         
-        return responseContent || text;
+        // If Azure OpenAI returns empty, try a simpler approach
+        if (!responseContent || responseContent.length === 0) {
+            console.log('⚠️ Empty response from Azure OpenAI, trying simple fallback');
+            
+            // Try a much simpler prompt
+            const simpleCompletion = await openai.chat.completions.create({
+                model: modelOrDeployment,
+                messages: [
+                    {
+                        role: "system", 
+                        content: "You are a helpful assistant. Make this text more professional and concise for a Teams chat message. Keep it friendly and conversational."
+                    },
+                    {
+                        role: "user",
+                        content: text
+                    }
+                ],
+                max_tokens: 100,
+                temperature: 0.7
+            });
+            
+            const simpleResponse = simpleCompletion.choices[0]?.message?.content?.trim();
+            console.log('Simple fallback response:', simpleResponse);
+            
+            return simpleResponse || text;
+        }
+        
+        return responseContent;
     } catch (error) {
         const elapsedTime = Date.now() - startTime;
         console.error('❌ AI processing error after', elapsedTime, 'ms:');
