@@ -1,0 +1,373 @@
+﻿const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const multer = require('multer');
+const { CloudAdapter, ConfigurationServiceClientCredentialFactory, createBotFrameworkAuthenticationFromConfiguration } = require('botbuilder');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Bot Framework setup
+const credentialsFactory = new ConfigurationServiceClientCredentialFactory({
+    MicrosoftAppId: process.env.MICROSOFT_APP_ID,
+    MicrosoftAppPassword: process.env.MICROSOFT_APP_PASSWORD,
+    MicrosoftAppType: process.env.MICROSOFT_APP_TYPE || 'MultiTenant',
+    MicrosoftAppTenantId: process.env.MICROSOFT_APP_TENANT_ID
+});
+
+const botFrameworkAuthentication = createBotFrameworkAuthenticationFromConfiguration(null, credentialsFactory);
+const adapter = new CloudAdapter(botFrameworkAuthentication);
+
+// Error handler for bot framework
+adapter.onTurnError = async (context, error) => {
+    console.error(`\n [onTurnError] unhandled error: ${error}`);
+    console.error(error);
+    await context.sendActivity('The bot encountered an error or bug.');
+};
+
+// Simple bot logic for handling task module submissions
+const bot = {
+    async run(context) {
+        // Handle task module submissions and other bot activities
+        if (context.activity.type === 'invoke') {
+            if (context.activity.name === 'task/submit') {
+                // Handle voice message submission
+                return {
+                    status: 200,
+                    body: {
+                        task: {
+                            type: 'continue',
+                            value: {
+                                title: 'Message Processed',
+                                height: 'small',
+                                width: 'small',
+                                card: {
+                                    type: 'AdaptiveCard',
+                                    version: '1.0',
+                                    body: [
+                                        {
+                                            type: 'TextBlock',
+                                            text: 'Your voice message has been processed successfully!'
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                };
+            }
+        }
+        
+        // Default response for other activities
+        if (context.activity.type === 'message') {
+            await context.sendActivity('Voice Message Extension is ready! Use the compose extension to record voice messages.');
+        }
+    }
+};
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Bot Framework endpoint - REQUIRED for Teams
+app.post('/api/messages', async (req, res) => {
+    await adapter.process(req, res, (context) => bot.run(context));
+});
+
+// Routes
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Test endpoint for Azure OpenAI integration
+app.post('/test-ai', express.json(), async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) {
+            return res.status(400).json({ error: 'Text is required' });
+        }
+
+        console.log('Testing Azure OpenAI with text:', text);
+        
+        // Test the processWithAI function
+        const result = await processWithAI(text);
+        
+        res.json({ 
+            success: true, 
+            original: text,
+            processed: result 
+        });
+    } catch (error) {
+        console.error('Test AI error:', error);
+        res.status(500).json({ 
+            error: 'AI processing failed', 
+            message: error.message 
+        });
+    }
+});
+
+// Configure multer for file uploads
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// Voice recording task module
+app.get('/voice-recorder', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/voice-recorder.html'));
+});
+
+// Handle task module result submission
+app.post('/api/task-submit', express.json(), (req, res) => {
+    try {
+        const { message } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({
+                success: false,
+                error: 'No message provided'
+            });
+        }
+
+        // For Teams task modules, we need to return the result in a specific format
+        // This will be handled by the Teams SDK on the client side
+        res.json({
+            success: true,
+            result: {
+                type: 'message',
+                message: message.trim()
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error handling task submission:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to submit task'
+        });
+    }
+});
+
+// API endpoint for processing voice recordings
+app.post('/api/process-voice', upload.single('audio'), async (req, res) => {
+    try {
+        console.log('Received voice processing request');
+        
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: 'No audio file provided'
+            });
+        }
+
+        let transcription;
+        
+        // Try to use Azure OpenAI or OpenAI for transcription if configured
+        if ((process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) || process.env.OPENAI_API_KEY) {
+            try {
+                transcription = await transcribeWithWhisper(req.file.buffer);
+                console.log('Transcription successful:', transcription.substring(0, 100) + '...');
+            } catch (whisperError) {
+                console.log('Whisper transcription failed, using mock data:', whisperError.message);
+                transcription = generateMockTranscription();
+            }
+        } else {
+            console.log('No OpenAI configuration found, using mock transcription');
+            transcription = generateMockTranscription();
+        }
+        
+        // Generate professional summary
+        const summary = await processWithAI(transcription);
+        
+        res.json({
+            success: true,
+            originalText: transcription,
+            summary: summary,
+            wordCount: transcription.split(' ').length
+        });
+        
+    } catch (error) {
+        console.error('Error processing voice:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process voice recording'
+        });
+    }
+});
+
+// Function to transcribe audio using OpenAI Whisper (Azure or Direct API)
+async function transcribeWithWhisper(audioBuffer) {
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+    
+    let openai;
+    
+    // Check if Azure OpenAI is configured first (recommended)
+    if (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) {
+        const { OpenAI } = require('openai');
+        
+        openai = new OpenAI({
+            apiKey: process.env.AZURE_OPENAI_API_KEY,
+            baseURL: `${process.env.AZURE_OPENAI_ENDPOINT}openai/deployments/whisper`,
+            defaultQuery: { 'api-version': '2024-02-01' },
+            defaultHeaders: {
+                'api-key': process.env.AZURE_OPENAI_API_KEY,
+            },
+        });
+        console.log('Using Azure OpenAI Service');
+    } else if (process.env.OPENAI_API_KEY) {
+        const { OpenAI } = require('openai');
+        openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+        console.log('Using direct OpenAI API');
+    } else {
+        throw new Error('No OpenAI configuration found');
+    }
+
+    // Create temporary file
+    const tempDir = os.tmpdir();
+    const tempFile = path.join(tempDir, `voice_${Date.now()}.webm`);
+    
+    try {
+        // Write buffer to temporary file
+        fs.writeFileSync(tempFile, audioBuffer);
+        
+        // Transcribe using Whisper
+        // For Azure OpenAI with deployment-specific baseURL, use the deployment name as model
+        const modelName = process.env.AZURE_OPENAI_WHISPER_DEPLOYMENT || 'whisper-1';
+        
+        const response = await openai.audio.transcriptions.create({
+            file: fs.createReadStream(tempFile),
+            model: modelName,
+            language: 'en',
+            response_format: 'text'
+        });
+        
+        // Clean up temporary file
+        fs.unlinkSync(tempFile);
+        
+        return response;
+    } catch (error) {
+        // Clean up temporary file on error
+        if (fs.existsSync(tempFile)) {
+            fs.unlinkSync(tempFile);
+        }
+        throw error;
+    }
+}
+
+// Generate mock transcription for testing
+function generateMockTranscription() {
+    // When OpenAI API is not available, show helpful message
+    return `[DEMO MODE - OpenAI API quota exceeded] 
+    
+Your voice was recorded successfully! 
+
+To get real AI transcription:
+1. Add credits to your OpenAI account at https://platform.openai.com/billing
+2. Or get a new API key at https://platform.openai.com/api-keys
+
+Your actual recording would be transcribed and summarized here.`;
+}
+
+// AI summarization function
+async function processWithAI(text) {
+    try {
+        let openai;
+        
+        // Check if Azure OpenAI is configured first (recommended)
+        if (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) {
+            const { OpenAI } = require('openai');
+            openai = new OpenAI({
+                apiKey: process.env.AZURE_OPENAI_API_KEY,
+                baseURL: `${process.env.AZURE_OPENAI_ENDPOINT}openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT_NAME}`,
+                defaultQuery: { 'api-version': '2024-02-01' },
+                defaultHeaders: {
+                    'api-key': process.env.AZURE_OPENAI_API_KEY,
+                },
+            });
+            console.log('Using Azure OpenAI for summarization');
+        } else if (process.env.OPENAI_API_KEY) {
+            const { OpenAI } = require('openai');
+            openai = new OpenAI({
+                apiKey: process.env.OPENAI_API_KEY,
+            });
+            console.log('Using direct OpenAI API for summarization');
+        } else {
+            throw new Error('No OpenAI configuration found');
+        }
+
+        // Use deployment name for Azure OpenAI, model name for direct OpenAI
+        const modelOrDeployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-3.5-turbo";
+
+        const completion = await openai.chat.completions.create({
+            model: modelOrDeployment,
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a professional communication assistant. Rewrite the voice message into a concise, polite, and professional Teams message. Keep the user's intent but make it clear and business-appropriate. Limit to 1-3 sentences."
+                },
+                {
+                    role: "user",
+                    content: text
+                }
+            ],
+            max_completion_tokens: 150,
+            temperature: 1,
+        });
+
+        // Extract the response content
+        const responseContent = completion.choices[0]?.message?.content?.trim();
+        return responseContent || text;
+    } catch (error) {
+        console.error('AI processing error:', error);
+        // Fallback: Simple summarization
+        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        if (sentences.length <= 2) {
+            return text.trim();
+        } else {
+            return sentences.slice(0, 2).join('. ') + '.';
+        }
+    }
+}
+
+// Privacy and Terms pages (required for Teams manifest)
+app.get('/privacy', (req, res) => {
+    res.send(`
+        <html>
+        <head><title>Privacy Policy</title></head>
+        <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+            <h1>Privacy Policy</h1>
+            <p>This Voice Message Extension processes audio recordings temporarily for transcription and summarization.</p>
+            <p>Voice recordings are not stored permanently and are processed securely.</p>
+            <p>This app is for internal use only and does not share data with external services beyond AI processing.</p>
+        </body>
+        </html>
+    `);
+});
+
+app.get('/terms', (req, res) => {
+    res.send(`
+        <html>
+        <head><title>Terms of Use</title></head>
+        <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+            <h1>Terms of Use</h1>
+            <p>This application is provided for internal use for voice message transcription and summarization.</p>
+            <p>Users are responsible for the content they record and process.</p>
+            <p>The app requires microphone access for voice recording functionality.</p>
+        </body>
+        </html>
+    `);
+});
+
+app.listen(PORT, () => {
+    console.log(` Teams Voice Extension Server running on port ${PORT}`);
+    console.log(` Access at: http://localhost:${PORT}`);
+    console.log(` Voice Recorder: http://localhost:${PORT}/voice-recorder`);
+});
+
+module.exports = app;

@@ -1,0 +1,78 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.21/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.21",
+    "version": "1.0.0",
+    "id": "2c376fe7-3692-4580-be4b-5e339df76813",
+    "developer": {
+        "name": "Internal Voice Extension Team",
+        "websiteUrl": "https://ed86c635b403.ngrok-free.app",
+        "privacyUrl": "https://ed86c635b403.ngrok-free.app/privacy",
+        "termsOfUseUrl": "https://ed86c635b403.ngrok-free.app/terms"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "Voice Message Pro",
+        "full": "Voice Message Pro - AI Powered Voice to Text"
+    },
+    "description": {
+        "short": "Voice recording with AI - Requires microphone access",
+        "full": "Record voice messages and get AI-powered transcription and summaries. This app will request microphone permission when you first use the voice recording feature."
+    },
+    "accentColor": "#6264A7",
+    "bots": [
+        {
+            "botId": "6db90f94-dabe-4115-be7b-b8f4837db7c8",
+            "scopes": ["personal", "team", "groupChat"],
+            "needsChannelSelector": false,
+            "isNotificationOnly": false,
+            "supportsCalling": false,
+            "supportsVideo": false
+        }
+    ],
+    "composeExtensions": [
+        {
+            "botId": "6db90f94-dabe-4115-be7b-b8f4837db7c8",
+            "commands": [
+                {
+                    "id": "voiceMessage",
+                    "context": ["compose", "commandBox"],
+                    "description": "Record voice message and get AI summary",
+                    "title": "?? Voice Message",
+                    "type": "action",
+                    "fetchTask": false,
+                    "taskInfo": {
+                        "title": "?? Record Voice Message",
+                        "height": "large",
+                        "width": "large",
+                        "url": "https://ed86c635b403.ngrok-free.app/voice-recorder"
+                    }
+                }
+            ],
+            "messageHandlers": [
+                {
+                    "type": "link",
+                    "value": {
+                        "domains": ["ed86c635b403.ngrok-free.app"]
+                    }
+                }
+            ]
+        }
+    ],
+    "permissions": [
+        "identity",
+        "messageTeamMembers"
+    ],
+    "devicePermissions": [
+        "media"
+    ],
+    "validDomains": [
+        "ed86c635b403.ngrok-free.app"
+    ]
+}
+
+
+
+

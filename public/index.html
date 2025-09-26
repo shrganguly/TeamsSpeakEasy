@@ -1,0 +1,268 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams Voice Message Extension 🎤</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 { 
+            font-size: 3em; 
+            margin-bottom: 20px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.3em; 
+            line-height: 1.6; 
+            margin-bottom: 40px; 
+            opacity: 0.9;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+            text-align: left;
+        }
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .feature h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.3em;
+        }
+        .feature p {
+            margin: 0;
+            font-size: 1em;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+        .cta-section {
+            margin: 50px 0;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .status-badge {
+            display: inline-block;
+            background: rgba(40, 167, 69, 0.2);
+            color: #90ee90;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin: 10px 0;
+            border: 1px solid rgba(40, 167, 69, 0.5);
+        }
+        .setup-steps {
+            text-align: left;
+            max-width: 600px;
+            margin: 30px auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 12px;
+        }
+        .setup-steps ol {
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+        .setup-steps li {
+            margin-bottom: 10px;
+        }
+        .footer {
+            margin-top: 50px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Message Pro</h1>
+        <p class="subtitle">
+            Transform your voice into professional Teams messages with AI-powered transcription and summarization
+        </p>
+        
+        <div class="status-badge">
+            ✅ Server Running - Ready for Teams Integration
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">🎙️</span>
+                <h3>Voice Recording</h3>
+                <p>One-click voice recording with real-time visual feedback and noise suppression</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🤖</span>
+                <h3>AI Transcription</h3>
+                <p>Automatic speech-to-text using OpenAI Whisper with high accuracy</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">✍️</span>
+                <h3>Professional Summary</h3>
+                <p>Transform casual speech into polished, business-appropriate messages</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📝</span>
+                <h3>Edit & Review</h3>
+                <p>Review and fine-tune AI-generated content before sending</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🔄</span>
+                <h3>Seamless Integration</h3>
+                <p>Direct insertion into Teams chat compose box with one click</p>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📱</span>
+                <h3>Universal Compatibility</h3>
+                <p>Works in group chats, 1:1 conversations, and channel discussions</p>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>🚀 Ready to Get Started?</h2>
+            <p>To use this extension in Microsoft Teams, you'll need to install it as a custom app.</p>
+            
+            <div class="setup-steps">
+                <h3>Quick Setup:</h3>
+                <ol>
+                    <li><strong>Deploy this app</strong> to a publicly accessible URL (HTTPS required)</li>
+                    <li><strong>Create the Teams package</strong> using the provided scripts</li>
+                    <li><strong>Upload to Teams</strong> via Apps → Upload a custom app</li>
+                    <li><strong>Start voice messaging</strong> in any chat conversation!</li>
+                </ol>
+            </div>
+
+            <a href="/voice-recorder" class="cta-button">🎤 Test Voice Recorder</a>
+            <a href="https://github.com/yourusername/teams-voice-extension" class="cta-button">📚 View Documentation</a>
+        </div>
+
+        <div class="footer">
+            <p>Voice Message Pro for Microsoft Teams | Internal Use Only</p>
+            <p>Powered by OpenAI • Built with ❤️ for better team communication</p>
+        </div>
+    </div>
+
+    <script>
+        // Add some dynamic status checking
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we can reach the voice processing endpoint
+            fetch('/api/process-voice', { method: 'POST' })
+                .then(response => {
+                    if (response.status === 400) {
+                        // Expected error for no file - means endpoint is working
+                        console.log('✅ Voice processing endpoint is ready');
+                    }
+                })
+                .catch(error => {
+                    console.log('⚠️ Voice processing endpoint may not be ready:', error);
+                });
+
+            // Add some interactive feedback
+            document.querySelectorAll('.cta-button').forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-3px) scale(1.02)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+        .feature-item {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        .test-link {
+            display: inline-block;
+            background: #6264A7;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 30px;
+            transition: background 0.3s ease;
+        }
+        .test-link:hover {
+            background: #4a4d84;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Teams Voice Extension</h1>
+        <p>Transform your voice into professional Teams messages with AI-powered summarization</p>
+        
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong> Voice Recording:</strong> High-quality audio capture with noise suppression
+            </div>
+            <div class="feature-item">
+                <strong> AI Summarization:</strong> Convert rambling voice notes into concise, professional messages
+            </div>
+            <div class="feature-item">
+                <strong> Edit & Review:</strong> Fine-tune your message before sending
+            </div>
+            <div class="feature-item">
+                <strong> Direct Integration:</strong> Insert directly into Teams chat compose box
+            </div>
+            <div class="feature-item">
+                <strong> Privacy First:</strong> Audio processed temporarily, not stored permanently
+            </div>
+        </div>
+        
+        <a href="/voice-recorder" class="test-link"> Test Voice Recorder</a>
+        
+        <p style="margin-top: 40px; font-size: 1em; opacity: 0.8;">
+            For internal use only. Install the Teams app to use this extension directly in your chats.
+        </p>
+    </div>
+</body>
+</html>

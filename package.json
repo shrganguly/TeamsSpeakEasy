@@ -1,0 +1,41 @@
+{
+  "name": "teams-voice-extension",
+  "version": "1.0.0",
+  "description": "Teams message extension with voice recording and AI summarization",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"No tests specified\" && exit 0",
+    "create-package": "powershell -ExecutionPolicy Bypass -File ./create-teams-package.ps1",
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./deploy.ps1"
+  },
+  "dependencies": {
+    "@azure/core-auth": "^1.10.0",
+    "@azure/identity": "^4.11.1",
+    "@azure/openai": "^2.0.0",
+    "botbuilder": "^4.23.3",
+    "botframework-connector": "^4.23.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "teams",
+    "voice",
+    "ai",
+    "transcription",
+    "microsoft-teams",
+    "extension"
+  ],
+  "author": "Internal Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

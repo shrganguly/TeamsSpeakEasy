@@ -1,0 +1,35 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.21/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.21",
+    "version": "1.0.0",
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "developer": {
+        "name": "Test Developer",
+        "websiteUrl": "https://www.microsoft.com",
+        "privacyUrl": "https://www.microsoft.com/privacy",
+        "termsOfUseUrl": "https://www.microsoft.com/terms"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "Test App",
+        "full": "Test Application"
+    },
+    "description": {
+        "short": "A test app",
+        "full": "A simple test application"
+    },
+    "accentColor": "#6264A7",
+    "staticTabs": [
+        {
+            "entityId": "test",
+            "name": "Test Tab",
+            "contentUrl": "https://www.microsoft.com",
+            "scopes": ["personal"]
+        }
+    ],
+    "permissions": [],
+    "validDomains": ["www.microsoft.com"]
+}

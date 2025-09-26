@@ -1,0 +1,51 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.21/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.21",
+    "version": "1.0.0",
+    "id": "6db90f94-dabe-4115-be7b-b8f4837db7c8",
+    "developer": {
+        "name": "Voice Extension Team",
+        "websiteUrl": "https://a599e6f6e781.ngrok-free.app",
+        "privacyUrl": "https://a599e6f6e781.ngrok-free.app/privacy",
+        "termsOfUseUrl": "https://a599e6f6e781.ngrok-free.app/terms"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "Voice Message",
+        "full": "Voice Message Extension"
+    },
+    "description": {
+        "short": "Record voice messages",
+        "full": "Record voice messages and get AI summaries"
+    },
+    "accentColor": "#6264A7",
+    "composeExtensions": [
+        {
+            "botId": "6db90f94-dabe-4115-be7b-b8f4837db7c8",
+            "commands": [
+                {
+                    "id": "voiceMessage",
+                    "context": ["compose"],
+                    "description": "Record voice message",
+                    "title": "Voice Message",
+                    "type": "action",
+                    "taskInfo": {
+                        "title": "Record Voice Message",
+                        "height": "large",
+                        "width": "large",
+                        "url": "https://a599e6f6e781.ngrok-free.app/voice-recorder"
+                    }
+                }
+            ]
+        }
+    ],
+    "permissions": [
+        "identity"
+    ],
+    "validDomains": [
+        "a599e6f6e781.ngrok-free.app"
+    ]
+}

@@ -1,0 +1,753 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Voice Message Recorder</title>
+    <script src="https://unpkg.com/@microsoft/teams-js@2.19.0/dist/MicrosoftTeams.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Mobile optimizations */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .recorder-container {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 90vw;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            /* Mobile optimizations */
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h2 {
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            color: #666;
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .record-button {
+            background: linear-gradient(135deg, #6264A7, #8A2BE2);
+            border: none;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(98, 100, 167, 0.3);
+            /* Mobile optimizations */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        
+        .record-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(98, 100, 167, 0.4);
+        }
+        
+        .record-button.recording {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3); }
+            50% { transform: scale(1.1); box-shadow: 0 12px 30px rgba(231, 76, 60, 0.5); }
+            100% { transform: scale(1); box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3); }
+        }
+        
+        .status {
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+            min-height: 25px;
+        }
+        
+        .status.recording {
+            color: #e74c3c;
+        }
+        
+        .waveform {
+            height: 60px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .waveform.active {
+            display: flex;
+        }
+        
+        .wave-bar {
+            width: 4px;
+            height: 20px;
+            background: #6264A7;
+            margin: 0 2px;
+            border-radius: 2px;
+            animation: wave 1s infinite ease-in-out;
+        }
+        
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes wave {
+            0%, 100% { height: 20px; }
+            50% { height: 40px; }
+        }
+        
+        .summary-section {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .summary-section.visible {
+            display: block;
+        }
+        
+        .text-area {
+            width: 100%;
+            min-height: 120px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 15px 0;
+            resize: vertical;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        
+        .text-area:focus {
+            outline: none;
+            border-color: #6264A7;
+            box-shadow: 0 0 0 3px rgba(98, 100, 167, 0.1);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6264A7, #8A2BE2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(98, 100, 167, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .btn-secondary:hover {
+            background: #dee2e6;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .permission-section {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .permission-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .permission-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .permission-section p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .action-button {
+            background: linear-gradient(135deg, #6264A7, #8A2BE2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(98, 100, 167, 0.3);
+        }
+        
+        .permission-help {
+            margin-top: 15px;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .desktop-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .desktop-warning h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+        }
+        
+        .desktop-warning p {
+            color: #856404;
+            margin: 5px 0;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #6264A7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="recorder-container">
+        <div class="header">
+            <h2>🎤 Voice Message</h2>
+            <p>Record your message and get a professional summary</p>
+        </div>
+        
+        <!-- Permission Request Section -->
+        <div id="permissionSection" class="permission-section">
+            <div class="permission-icon">🎤</div>
+            <h3>Microphone Access Required</h3>
+            <p>This app needs access to your microphone to record voice messages.</p>
+            <button id="requestPermissionBtn" class="action-button">
+                🔓 Allow Microphone Access
+            </button>
+            <div class="permission-help">
+                <small>Click "Allow" when your browser asks for microphone permission</small>
+            </div>
+        </div>
+
+        <!-- Recording Section (Initially Hidden) -->
+        <div id="recordingSection" style="display: none;">
+            <button id="recordButton" class="record-button"></button>
+            <div id="status" class="status">🎤 Click to start recording</div>
+            
+            <div id="waveform" class="waveform">
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+                <div class="wave-bar"></div>
+            </div>
+            
+            <!-- Desktop Teams Warning -->
+            <div id="desktopWarning" class="desktop-warning" style="display: none;">
+                <h4>⚠️ Desktop Teams Limitation</h4>
+                <p>Voice recording may not work properly in Desktop Teams app.</p>
+                <p><strong>Recommended:</strong> Use this extension in web browser:</p>
+                <a href="https://teams.microsoft.com" target="_blank" class="action-button">
+                    🌐 Open Teams in Browser
+                </a>
+            </div>
+        </div>
+        
+        <div id="summarySection" class="summary-section">
+            <h3>Your Professional Message:</h3>
+            <textarea id="summaryText" class="text-area" placeholder="Your summarized message will appear here..."></textarea>
+            
+            <div class="action-buttons">
+                <button id="editBtn" class="btn btn-secondary">✏️ Edit</button>
+                <button id="insertBtn" class="btn btn-success">✅ Insert to Chat</button>
+                <button id="recordNewBtn" class="btn btn-primary">🎤 Record New</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VoiceRecorder {
+            constructor() {
+                this.isRecording = false;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.recordingStartTime = null;
+                this.hasPermission = false;
+                this.initializeTeams();
+                this.setupEventListeners();
+                this.checkInitialPermissions();
+            }
+
+            async checkInitialPermissions() {
+                try {
+                    // Check if we already have permission
+                    const permission = await navigator.permissions.query({ name: 'microphone' });
+                    if (permission.state === 'granted') {
+                        this.hasPermission = true;
+                        this.showRecordingSection();
+                    }
+                } catch (error) {
+                    console.log('Permission check not supported, will request on demand');
+                }
+            }
+
+            showRecordingSection() {
+                document.getElementById('permissionSection').style.display = 'none';
+                document.getElementById('recordingSection').style.display = 'block';
+                
+                // Check if we're in Desktop Teams and show warning
+                this.checkIfDesktopTeams();
+            }
+            
+            checkIfDesktopTeams() {
+                // Detect Desktop Teams by checking user agent and available APIs
+                const isDesktopTeams = navigator.userAgent.includes('Teams/') || 
+                                     !window.navigator.mediaDevices ||
+                                     window.location.protocol === 'msteams:';
+                
+                // Check if we're on mobile
+                const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    // Mobile - hide desktop warning, show mobile-optimized message
+                    const status = document.getElementById('status');
+                    status.innerHTML = '📱 Mobile Teams - Perfect for voice recording! Tap to start.';
+                    return;
+                }
+                
+                if (isDesktopTeams || !navigator.mediaDevices.getUserMedia) {
+                    document.getElementById('desktopWarning').style.display = 'block';
+                }
+            }
+
+            async requestMicrophonePermission() {
+                const button = document.getElementById('requestPermissionBtn');
+                button.innerHTML = '⏳ Requesting Permission...';
+                button.disabled = true;
+
+                try {
+                    // Request microphone permission
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 44100
+                        } 
+                    });
+                    
+                    // Permission granted! Clean up test stream
+                    stream.getTracks().forEach(track => track.stop());
+                    this.hasPermission = true;
+                    this.showRecordingSection();
+                    
+                } catch (error) {
+                    console.error('Permission denied:', error);
+                    button.innerHTML = '❌ Permission Denied - Try Again';
+                    button.disabled = false;
+                    
+                    // Show helpful message
+                    const helpDiv = document.querySelector('.permission-help');
+                    helpDiv.innerHTML = `
+                        <small style="color: red;">
+                            Permission denied. Please:<br>
+                            1. Click the microphone icon in your browser's address bar<br>
+                            2. Select "Allow" and refresh this page<br>
+                            3. Or check your browser's microphone settings
+                        </small>
+                    `;
+                }
+            }
+
+            async initializeTeams() {
+                try {
+                    await microsoftTeams.app.initialize();
+                    console.log('Teams app initialized successfully');
+                } catch (error) {
+                    console.log('Not running in Teams context:', error);
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('requestPermissionBtn').addEventListener('click', () => this.requestMicrophonePermission());
+                document.getElementById('recordButton').addEventListener('click', () => this.toggleRecording());
+                document.getElementById('editBtn').addEventListener('click', () => this.enableEditing());
+                document.getElementById('insertBtn').addEventListener('click', () => this.insertToChat());
+                document.getElementById('recordNewBtn').addEventListener('click', () => this.startNewRecording());
+            }
+
+            async toggleRecording() {
+                console.log('Toggle recording clicked, isRecording:', this.isRecording, 'hasPermission:', this.hasPermission);
+                
+                if (!this.isRecording) {
+                    await this.startRecording();
+                } else {
+                    this.stopRecording();
+                }
+            }
+
+            async startRecording() {
+                console.log('StartRecording called, hasPermission:', this.hasPermission);
+                
+                if (!this.hasPermission) {
+                    this.updateStatus('Please allow microphone access first');
+                    alert('Please click "Allow Microphone Access" button first');
+                    return;
+                }
+
+                try {
+                    this.updateStatus('🎤 Requesting microphone access...');
+                    console.log('Requesting getUserMedia...');
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 44100
+                        } 
+                    });
+                    
+                    console.log('Got media stream:', stream);
+                    
+                    // Check if MediaRecorder is supported
+                    if (!window.MediaRecorder) {
+                        throw new Error('MediaRecorder not supported in this browser/app');
+                    }
+                    
+                    this.mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'audio/webm;codecs=opus'
+                    });
+                    
+                    console.log('MediaRecorder created:', this.mediaRecorder);
+                    
+                    this.audioChunks = [];
+                    this.recordingStartTime = Date.now();
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        console.log('Data available:', event.data.size);
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        console.log('Recording stopped, processing...');
+                        this.processRecording();
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    this.mediaRecorder.onerror = (event) => {
+                        console.error('MediaRecorder error:', event.error);
+                        this.updateStatus('Recording error: ' + event.error);
+                    };
+
+                    this.mediaRecorder.start(100); // Collect data every 100ms
+                    this.isRecording = true;
+                    this.updateUI('recording');
+                    console.log('Recording started successfully');
+
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    this.updateStatus('Error: ' + error.message);
+                    
+                    // Show helpful message for Desktop Teams
+                    if (error.name === 'NotAllowedError') {
+                        this.updateStatus('❌ Microphone access denied. Try using Teams in a web browser instead.');
+                    } else if (error.name === 'NotFoundError') {
+                        this.updateStatus('❌ No microphone found. Check your audio devices.');
+                    } else {
+                        this.updateStatus('❌ Recording not supported in Desktop Teams. Try web browser.');
+                    }
+                }
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    this.updateUI('processing');
+                }
+            }
+
+            async processRecording() {
+                this.updateStatus('🎵 Processing your message...');
+                
+                try {
+                    // Create audio blob
+                    const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                    
+                    // Show loading indicator
+                    this.showLoadingState(true);
+                    
+                    // Create form data
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.webm');
+                    
+                    // Send to server for processing
+                    const response = await fetch('/api/process-voice', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.displaySummary(result.summary, result.originalText, result.wordCount);
+                        } else {
+                            throw new Error(result.error || 'Failed to process recording');
+                        }
+                    } else {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error processing recording:', error);
+                    this.updateStatus('⚠️ Processing failed. Using offline mode...');
+                    
+                    // Fallback with mock data
+                    const mockSummary = "Hi team, following up on yesterday's project discussion. Can we schedule a meeting this week to review deliverables and next steps?";
+                    setTimeout(() => {
+                        this.displaySummary(mockSummary, "Original transcription not available in offline mode", 15);
+                    }, 1000);
+                } finally {
+                    this.showLoadingState(false);
+                }
+            }
+
+            showLoadingState(show) {
+                const recordButton = document.getElementById('recordButton');
+                if (show) {
+                    recordButton.innerHTML = '<div class="loading"></div>';
+                    recordButton.disabled = true;
+                } else {
+                    recordButton.innerHTML = '🎤';
+                    recordButton.disabled = false;
+                }
+            }
+
+            displaySummary(summary, originalText, wordCount) {
+                document.getElementById('summaryText').value = summary;
+                document.getElementById('summarySection').classList.add('visible');
+                
+                // Show word count and original text info
+                const statusMsg = wordCount ? 
+                    `✅ Processed ${wordCount} words into professional message` : 
+                    '✅ Message ready for review';
+                this.updateStatus(statusMsg);
+                this.updateUI('completed');
+                
+                // Store original text for reference if needed
+                this.originalText = originalText;
+            }
+
+            enableEditing() {
+                const textArea = document.getElementById('summaryText');
+                textArea.focus();
+                textArea.select();
+            }
+
+            async insertToChat() {
+                const text = document.getElementById('summaryText').value.trim();
+                
+                if (!text) {
+                    alert('Please enter a message to insert');
+                    return;
+                }
+
+                try {
+                    // For Teams Task Modules, we need to submit the result back to Teams
+                    if (typeof microsoftTeams !== 'undefined') {
+                        await microsoftTeams.dialog.submit({
+                            type: 'message',
+                            message: text
+                        });
+                        
+                        // If the above works, we don't need the fallback
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Teams dialog.submit failed:', error);
+                }
+
+                try {
+                    // Fallback method for older Teams SDK versions
+                    if (typeof microsoftTeams !== 'undefined') {
+                        await microsoftTeams.tasks.submitTask({
+                            type: 'message',
+                            message: text
+                        });
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Teams tasks.submitTask failed:', error);
+                }
+
+                // Ultimate fallback - copy to clipboard and show instructions
+                try {
+                    await navigator.clipboard.writeText(text);
+                    this.showSuccessMessage(' Message copied to clipboard! Close this window and paste (Ctrl+V) in the Teams chat.');
+                } catch (error) {
+                    // Manual selection fallback for older browsers
+                    document.getElementById('summaryText').select();
+                    document.execCommand('copy');
+                    this.showSuccessMessage(' Message selected and copied! Close this window and paste (Ctrl+V) in the Teams chat.');
+                }
+            }
+
+            showSuccessMessage(message) {
+                const statusElement = document.getElementById('status');
+                statusElement.innerHTML = `<span style="color: #28a745; font-weight: bold;">${message}</span>`;
+                
+                // Also update the insert button to indicate success
+                const insertBtn = document.getElementById('insertBtn');
+                insertBtn.innerHTML = ' Message Ready - Close Window';
+                insertBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            }
+
+            startNewRecording() {
+                // Reset UI
+                document.getElementById('summarySection').classList.remove('visible');
+                document.getElementById('summaryText').value = '';
+                this.updateUI('ready');
+                this.updateStatus('🎤 Click to start recording');
+                
+                // Reset insert button
+                const insertBtn = document.getElementById('insertBtn');
+                insertBtn.innerHTML = '✅ Insert to Chat';
+                insertBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            }
+
+            updateUI(state) {
+                const recordButton = document.getElementById('recordButton');
+                const waveform = document.getElementById('waveform');
+                
+                switch (state) {
+                    case 'recording':
+                        recordButton.classList.add('recording');
+                        recordButton.textContent = '⏹️';
+                        waveform.classList.add('active');
+                        this.updateStatus('🔴 Recording... Click to stop');
+                        break;
+                    case 'processing':
+                        recordButton.classList.remove('recording');
+                        recordButton.innerHTML = '<div class="loading"></div>';
+                        waveform.classList.remove('active');
+                        recordButton.disabled = true;
+                        break;
+                    case 'completed':
+                        recordButton.textContent = '🎤';
+                        recordButton.disabled = false;
+                        break;
+                    case 'ready':
+                        recordButton.classList.remove('recording');
+                        recordButton.textContent = '🎤';
+                        recordButton.disabled = false;
+                        waveform.classList.remove('active');
+                        break;
+                }
+            }
+
+            updateStatus(message) {
+                const statusElement = document.getElementById('status');
+                statusElement.textContent = message;
+                statusElement.className = this.isRecording ? 'status recording' : 'status';
+            }
+        }
+
+        // Initialize the voice recorder when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            new VoiceRecorder();
+        });
+    </script>
+</body>
+</html>
