@@ -1,9 +1,9 @@
-# 🎤 Voice Message Pro - Installation Guide
+# 🎤 Speak Easy - Installation Guide
 
 ## 📱 **For Teammates: Simple Installation**
 
 ### **What is this?**
-A Teams message extension that lets you:
+Speak Easy is a Teams message extension that lets you:
 - 🎙️ Record voice messages in any chat
 - 🤖 Get AI-powered professional summaries  
 - ✨ Insert polished messages instantly
@@ -11,24 +11,24 @@ A Teams message extension that lets you:
 ### **How to Install:**
 
 1. **Download the app package:**
-   - Get `TeamsVoiceExtension-Production.zip` from Shreya
+   - Get `SpeakEasy-Production.zip` from Shreya
    - Or download from our shared drive/email
 
 2. **Install in Microsoft Teams:**
    - Open **Microsoft Teams** (desktop or web)
    - Go to **Apps** → **Upload a custom app**
-   - Select the `TeamsVoiceExtension-Production.zip` file
+   - Select the `SpeakEasy-Production.zip` file
    - Click **Install** when prompted
 
 3. **Start using immediately:**
    - Open any chat in Teams
-   - Look for the 🎤 **Voice Message** button in the compose area
+   - Look for the 🎤 **Speak Easy** button in the compose area
    - Click it → Record → Get AI summary → Send!
 
 ### **How to Use:**
 
 1. **In any Teams chat:**
-   - Click the 🎤 **Voice Message** button
+   - Click the 🎤 **Speak Easy** button
    - Grant microphone permission (first time only)
 
 2. **Record your message:**

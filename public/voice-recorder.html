@@ -644,15 +644,16 @@
                     return;
                 }
 
+                console.log('Attempting to insert text to chat:', text);
+                
                 try {
-                    // For Teams Task Modules, we need to submit the result back to Teams
-                    if (typeof microsoftTeams !== 'undefined') {
+                    // Method 1: Try the new SDK approach
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.dialog) {
+                        console.log('Trying microsoftTeams.dialog.submit...');
                         await microsoftTeams.dialog.submit({
-                            type: 'message',
                             message: text
                         });
-                        
-                        // If the above works, we don't need the fallback
+                        console.log('Dialog submit successful');
                         return;
                     }
                 } catch (error) {
@@ -660,16 +661,29 @@
                 }
 
                 try {
-                    // Fallback method for older Teams SDK versions
-                    if (typeof microsoftTeams !== 'undefined') {
+                    // Method 2: Try the legacy tasks API
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
+                        console.log('Trying microsoftTeams.tasks.submitTask...');
                         await microsoftTeams.tasks.submitTask({
-                            type: 'message',
                             message: text
                         });
+                        console.log('Tasks submitTask successful');
                         return;
                     }
                 } catch (error) {
                     console.log('Teams tasks.submitTask failed:', error);
+                }
+
+                try {
+                    // Method 3: Try direct text submission
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
+                        console.log('Trying direct text submission...');
+                        await microsoftTeams.tasks.submitTask(text);
+                        console.log('Direct text submission successful');
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Direct text submission failed:', error);
                 }
 
                 // Ultimate fallback - copy to clipboard and show instructions

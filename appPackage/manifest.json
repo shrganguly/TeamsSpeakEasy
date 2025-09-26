@@ -1,25 +1,25 @@
 {
     "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.21/MicrosoftTeams.schema.json",
     "manifestVersion": "1.21",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "id": "2c376fe7-3692-4580-be4b-5e339df76813",
     "developer": {
         "name": "Internal Voice Extension Team",
-        "websiteUrl": "https://ed86c635b403.ngrok-free.app",
-        "privacyUrl": "https://ed86c635b403.ngrok-free.app/privacy",
-        "termsOfUseUrl": "https://ed86c635b403.ngrok-free.app/terms"
+        "websiteUrl": "https://teamsspeakeasy.onrender.com",
+        "privacyUrl": "https://teamsspeakeasy.onrender.com/privacy",
+        "termsOfUseUrl": "https://teamsspeakeasy.onrender.com/terms"
     },
     "icons": {
         "color": "color.png",
         "outline": "outline.png"
     },
     "name": {
-        "short": "Voice Message Pro",
-        "full": "Voice Message Pro - AI Powered Voice to Text"
+        "short": "Speak Easy",
+        "full": "Speak Easy - AI Powered Voice to Text"
     },
     "description": {
-        "short": "Voice recording with AI - Requires microphone access",
-        "full": "Record voice messages and get AI-powered transcription and summaries. This app will request microphone permission when you first use the voice recording feature."
+        "short": "AI-powered voice messaging made easy",
+        "full": "Speak Easy transforms your voice into polished, professional messages using AI. Record naturally, get smart summaries, and communicate effortlessly in Teams."
     },
     "accentColor": "#6264A7",
     "bots": [
@@ -39,15 +39,15 @@
                 {
                     "id": "voiceMessage",
                     "context": ["compose", "commandBox"],
-                    "description": "Record voice message and get AI summary",
-                    "title": "?? Voice Message",
+                    "description": "Record voice message with Speak Easy",
+                    "title": "🎤 Speak Easy",
                     "type": "action",
                     "fetchTask": false,
                     "taskInfo": {
-                        "title": "?? Record Voice Message",
+                        "title": "🎤 Speak Easy - Record Voice Message",
                         "height": "large",
                         "width": "large",
-                        "url": "https://ed86c635b403.ngrok-free.app/voice-recorder"
+                        "url": "https://teamsspeakeasy.onrender.com/voice-recorder"
                     }
                 }
             ],
@@ -55,7 +55,7 @@
                 {
                     "type": "link",
                     "value": {
-                        "domains": ["ed86c635b403.ngrok-free.app"]
+                        "domains": ["teamsspeakeasy.onrender.com"]
                     }
                 }
             ]
@@ -69,7 +69,7 @@
         "media"
     ],
     "validDomains": [
-        "ed86c635b403.ngrok-free.app"
+        "teamsspeakeasy.onrender.com"
     ]
 }
 

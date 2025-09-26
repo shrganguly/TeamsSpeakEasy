@@ -33,26 +33,34 @@ const bot = {
         if (context.activity.type === 'invoke') {
             if (context.activity.name === 'task/submit') {
                 // Handle voice message submission
+                const data = context.activity.value?.data || context.activity.value;
+                const message = data?.message || data?.value?.message || 'Voice message processed';
+                
+                console.log('Task submit received:', JSON.stringify(data, null, 2));
+                
+                // Return the message to be inserted into the compose area
                 return {
                     status: 200,
                     body: {
-                        task: {
-                            type: 'continue',
-                            value: {
-                                title: 'Message Processed',
-                                height: 'small',
-                                width: 'small',
-                                card: {
-                                    type: 'AdaptiveCard',
-                                    version: '1.0',
-                                    body: [
-                                        {
-                                            type: 'TextBlock',
-                                            text: 'Your voice message has been processed successfully!'
-                                        }
-                                    ]
+                        composeExtension: {
+                            type: 'result',
+                            attachmentLayout: 'list',
+                            attachments: [
+                                {
+                                    contentType: 'application/vnd.microsoft.card.adaptive',
+                                    content: {
+                                        type: 'AdaptiveCard',
+                                        version: '1.0',
+                                        body: [
+                                            {
+                                                type: 'TextBlock',
+                                                text: message,
+                                                wrap: true
+                                            }
+                                        ]
+                                    }
                                 }
-                            }
+                            ]
                         }
                     }
                 };
