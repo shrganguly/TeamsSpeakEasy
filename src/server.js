@@ -324,7 +324,9 @@ ADAPTIVE LENGTH GUIDELINES:
 - MEDIUM dictations (3-5 sentences): Allow 2-4 sentences in output  
 - LONG dictations (6+ sentences): Allow 3-6 sentences, capture key points proportionally
 - Always use warm, friendly tone with "Hey", "Hi", or casual starters
-- AGGRESSIVELY REMOVE ALL FILLER WORDS: "you know", "like", "um", "uh", "so", "actually", "basically", "I mean", "sort of", "kind of", "I think", "I guess", "the thing is", "what I wanted to say"
+- AGGRESSIVELY REMOVE FILLER WORDS: "you know", "like", "um", "uh", "actually", "basically", "I mean", "sort of", "kind of", "I guess", "the thing is", "what I wanted to say"
+- PRESERVE meaningful phrases like "I think" and "I believe" (unless used repetitively)
+- Remove excessive "so" at sentence starts but keep meaningful "so" (like "so we can...")
 - Clean up repetitive phrases and false starts
 - Sound conversational, not commanding or formal
 - Add friendly touches like "thanks!" or "let me know!"
@@ -344,6 +346,9 @@ Output: "Hey everyone! Running about 15 mins late due to traffic - thanks for yo
 
 Input: "Uh can you please share that doc with me again? I can't find it anywhere. I thought I saved it but now I'm not sure where it went."
 Output: "Hey, could you share that doc again? Can't seem to find it anywhere - thought I saved it but not sure where it went. Thanks!"
+
+Input: "I think we should go with option A, you know, because it has better ROI and, like, I believe it's the right choice for our team."
+Output: "Hey! I think we should go with option A - better ROI and I believe it's the right choice for our team."
 
 FILLER WORD REMOVAL EXAMPLE:
 Input: "So the thing is, what I told, what we actually discussed in the MVP Insider session call, that it's majorly two themes of feedback. The first theme being, you know, having support of Excel, and the second is, you know, having a way to change, have a two-way sync sort of thing with documents. So yeah, these are the two key themes of feedback and we'll work on it."
