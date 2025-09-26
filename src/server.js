@@ -36,7 +36,30 @@ const bot = {
         console.log('Full activity:', JSON.stringify(context.activity, null, 2));
         
         if (context.activity.type === 'invoke') {
-            if (context.activity.name === 'task/submit') {
+            if (context.activity.name === 'task/fetch') {
+                console.log('=== TASK FETCH HANDLER ===');
+                console.log('Handling task/fetch for compose extension');
+                
+                // Return task module configuration
+                const response = {
+                    status: 200,
+                    body: {
+                        task: {
+                            type: 'continue',
+                            value: {
+                                title: '🎤 Speak Easy - Record Voice Message',
+                                height: 'large',
+                                width: 'large',
+                                url: 'https://teamsspeakeasy.onrender.com/voice-recorder'
+                            }
+                        }
+                    }
+                };
+                
+                console.log('Returning task fetch response:', JSON.stringify(response, null, 2));
+                return response;
+            }
+            else if (context.activity.name === 'task/submit') {
                 console.log('=== TASK SUBMIT HANDLER ===');
                 const submittedData = context.activity.value || {};
                 const message = submittedData.message || submittedData;
