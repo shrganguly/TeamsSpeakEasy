@@ -835,17 +835,11 @@
             }
             
             async showResult(message) {
+                console.log('=== SHOW RESULT CALLED ===');
+                console.log('Message to display:', message);
+                
                 // Hide processing section
                 document.getElementById('processingSection').classList.remove('visible');
-                
-                // Auto-copy to clipboard and show simple instructions
-                let copyStatus = '';
-                try {
-                    await navigator.clipboard.writeText(message);
-                    copyStatus = '✅ Already copied to clipboard!';
-                } catch (error) {
-                    copyStatus = '⚠️ Manual copy needed';
-                }
                 
                 // Show result with clear copy instructions
                 const resultHTML = `

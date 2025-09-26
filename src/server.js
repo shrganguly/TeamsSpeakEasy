@@ -183,6 +183,17 @@ app.get('/voice-recorder', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/voice-recorder.html'));
 });
 
+// New endpoint to bypass Teams caching
+app.get('/voice-recorder-v2', (req, res) => {
+    // Set headers to prevent caching
+    res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    });
+    res.sendFile(path.join(__dirname, '../public/voice-recorder.html'));
+});
+
 // Handle task module result submission
 app.post('/api/task-submit', express.json(), (req, res) => {
     try {
