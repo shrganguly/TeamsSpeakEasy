@@ -1,7 +1,7 @@
 {
     "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.21/MicrosoftTeams.schema.json",
     "manifestVersion": "1.21",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "id": "2c376fe7-3692-4580-be4b-5e339df76813",
     "developer": {
         "name": "Internal Voice Extension Team",
@@ -42,7 +42,13 @@
                     "description": "Record voice message with Speak Easy",
                     "title": "🎤 Speak Easy",
                     "type": "action",
-                    "fetchTask": true
+                    "fetchTask": false,
+                    "taskInfo": {
+                        "title": "🎤 Speak Easy - Record Voice Message",
+                        "height": "large",
+                        "width": "large",
+                        "url": "https://teamsspeakeasy.onrender.com/voice-recorder"
+                    }
                 }
             ],
             "messageHandlers": [
