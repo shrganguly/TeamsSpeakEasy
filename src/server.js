@@ -306,25 +306,41 @@ Your actual recording would be transcribed and summarized here.`;
 
 // AI summarization function
 async function processWithAI(text) {
+    const startTime = Date.now();
+    console.log('=== AZURE OPENAI DEBUG ===');
+    console.log('Input text:', text.substring(0, 100) + '...');
+    console.log('Text length:', text.length);
+    
     try {
         let openai;
         
         // Check if Azure OpenAI is configured first (recommended)
         if (process.env.AZURE_OPENAI_API_KEY && process.env.AZURE_OPENAI_ENDPOINT) {
+            console.log('Azure OpenAI Configuration:');
+            console.log('- Endpoint:', process.env.AZURE_OPENAI_ENDPOINT);
+            console.log('- Deployment:', process.env.AZURE_OPENAI_DEPLOYMENT_NAME);
+            console.log('- API Key exists:', !!process.env.AZURE_OPENAI_API_KEY);
+            console.log('- API Key length:', process.env.AZURE_OPENAI_API_KEY?.length || 0);
+            
             const { OpenAI } = require('openai');
+            const baseURL = `${process.env.AZURE_OPENAI_ENDPOINT}openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT_NAME}`;
+            console.log('- Full Base URL:', baseURL);
+            
             openai = new OpenAI({
                 apiKey: process.env.AZURE_OPENAI_API_KEY,
-                baseURL: `${process.env.AZURE_OPENAI_ENDPOINT}openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT_NAME}`,
+                baseURL: baseURL,
                 defaultQuery: { 'api-version': '2024-02-01' },
                 defaultHeaders: {
                     'api-key': process.env.AZURE_OPENAI_API_KEY,
                 },
+                timeout: 30000, // 30 second timeout
             });
-            console.log('Using Azure OpenAI for summarization');
+            console.log('✅ Azure OpenAI client initialized');
         } else if (process.env.OPENAI_API_KEY) {
             const { OpenAI } = require('openai');
             openai = new OpenAI({
                 apiKey: process.env.OPENAI_API_KEY,
+                timeout: 30000, // 30 second timeout
             });
             console.log('Using direct OpenAI API for summarization');
         } else {
@@ -333,10 +349,13 @@ async function processWithAI(text) {
 
         // Use deployment name for Azure OpenAI, model name for direct OpenAI
         const modelOrDeployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-3.5-turbo";
+        console.log('Using model/deployment:', modelOrDeployment);
 
-        const completion = await openai.chat.completions.create({
-            model: modelOrDeployment,
-            messages: [
+        console.log('🚀 Making API call to Azure OpenAI...');
+        const completion = await Promise.race([
+            openai.chat.completions.create({
+                model: modelOrDeployment,
+                messages: [
                 {
                     role: "system",
                     content: `You are a friendly communication assistant that converts voice messages into warm, conversational Teams chat messages. Make them sound natural and friendly - like how people actually talk in 1:1 and group chats.
@@ -388,15 +407,32 @@ Output: "Hey team! Following up on yesterday's Q4 roadmap discussion. Three main
                     content: text
                 }
             ],
-            max_completion_tokens: 150,
-            temperature: 1,
-        });
+                max_completion_tokens: 150,
+                temperature: 1,
+            }),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Azure OpenAI timeout after 25 seconds')), 25000)
+            )
+        ]);
+        
+        const elapsedTime = Date.now() - startTime;
+        console.log('✅ Azure OpenAI API call completed in', elapsedTime, 'ms');
+        console.log('Response choices count:', completion.choices?.length || 0);
 
         // Extract the response content
         const responseContent = completion.choices[0]?.message?.content?.trim();
+        console.log('Response content:', responseContent?.substring(0, 100) + '...');
+        console.log('Response length:', responseContent?.length || 0);
+        
         return responseContent || text;
     } catch (error) {
-        console.error('AI processing error:', error);
+        const elapsedTime = Date.now() - startTime;
+        console.error('❌ AI processing error after', elapsedTime, 'ms:');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        console.error('Full error:', error);
+        
         // Fallback: Simple summarization
         const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
         if (sentences.length <= 2) {
