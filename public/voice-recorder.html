@@ -654,28 +654,53 @@
                 insertBtn.disabled = true;
 
                 try {
-                    // Method 1: Modern Teams SDK 2.x approach
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.dialog && microsoftTeams.dialog.submit) {
-                        console.log('Trying modern microsoftTeams.dialog.submit...');
+                    // Method 1: Compose Extension Task Module submission (CORRECT approach)
+                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
+                        console.log('Trying Teams compose extension submitTask...');
                         
-                        // Try different payload formats
-                        const payloads = [
-                            { message: text },
-                            { text: text },
-                            text,
-                            { data: { message: text } },
-                            { value: { message: text } }
-                        ];
-                        
-                        for (let i = 0; i < payloads.length; i++) {
-                            try {
-                                console.log(`Trying payload ${i + 1}:`, payloads[i]);
-                                await microsoftTeams.dialog.submit(payloads[i]);
-                                console.log(`Dialog submit successful with payload ${i + 1}`);
-                                return;
-                            } catch (err) {
-                                console.log(`Payload ${i + 1} failed:`, err);
+                        // This is the correct format for compose extension task submissions
+                        const composePayload = {
+                            composeExtension: {
+                                type: 'result',
+                                attachmentLayout: 'list',
+                                attachments: [
+                                    {
+                                        contentType: 'application/vnd.microsoft.card.adaptive',
+                                        content: {
+                                            type: 'AdaptiveCard',
+                                            version: '1.0',
+                                            body: [
+                                                {
+                                                    type: 'TextBlock',
+                                                    text: text,
+                                                    wrap: true
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
                             }
+                        };
+                        
+                        try {
+                            console.log('Submitting compose extension payload:', composePayload);
+                            microsoftTeams.tasks.submitTask(composePayload);
+                            console.log('Compose extension submit successful');
+                            this.showSuccessMessage('✅ Message inserted into chat!');
+                            return;
+                        } catch (err) {
+                            console.log('Compose extension failed:', err);
+                        }
+                        
+                        // Fallback: Try simple text submission
+                        try {
+                            console.log('Trying simple text submission...');
+                            microsoftTeams.tasks.submitTask(text);
+                            console.log('Simple text submission successful');
+                            this.showSuccessMessage('✅ Message inserted into chat!');
+                            return;
+                        } catch (err) {
+                            console.log('Simple text submission failed:', err);
                         }
                     }
                 } catch (error) {
@@ -738,6 +763,13 @@
                         console.log('execCommand failed:', execError);
                         this.showErrorMessage('❌ Unable to copy automatically. Please manually copy the text above.');
                         insertBtn.innerHTML = originalText;
+                        insertBtn.disabled = false;
+                    }
+                } finally {
+                    // Always reset button state if not already reset
+                    const insertBtn = document.getElementById('insertBtn');
+                    if (insertBtn && insertBtn.innerHTML !== '📤 Insert to Chat') {
+                        insertBtn.innerHTML = '📤 Insert to Chat';
                         insertBtn.disabled = false;
                     }
                 }

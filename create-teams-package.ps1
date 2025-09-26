@@ -22,7 +22,8 @@ if (-not $AppId -or -not $BaseUrl -or -not $Domain) {
     }
     
     if (-not $BaseUrl) {
-        $BaseUrl = Read-Host "Enter your ngrok base URL (e.g., https://abc123.ngrok-free.app)"
+        $BaseUrl = "https://teamsspeakeasy.onrender.com"
+        Write-Host " Using Render production URL: $BaseUrl" -ForegroundColor Green
     }
     
     if (-not $Domain) {
@@ -52,7 +53,7 @@ Write-Host "   Base URL: $BaseUrl" -ForegroundColor White
 Write-Host "   Domain: $Domain" -ForegroundColor White
 
 # Create package
-$packageName = "TeamsVoiceExtension-$(Get-Date -Format 'yyyyMMdd-HHmm').zip"
+$packageName = "SpeakEasy-Production-$(Get-Date -Format 'yyyyMMdd-HHmm').zip"
 
 try {
     Compress-Archive -Path "appPackage/*" -DestinationPath $packageName -Force
