@@ -154,7 +154,7 @@ app.get('/test-azure-simple', async (req, res) => {
         const response = await openai.chat.completions.create({
             model: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
             messages: [{ role: 'user', content: 'Say hello world' }],
-            max_tokens: 10
+            max_completion_tokens: 10
         });
         
         res.json({
@@ -480,7 +480,7 @@ Output: "Hey team! Following up on yesterday's Q4 roadmap discussion. Three main
                         content: text
                     }
                 ],
-                max_tokens: 100,
+                max_completion_tokens: 100,
                 temperature: 0.7
             });
             
