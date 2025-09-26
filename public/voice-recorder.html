@@ -744,17 +744,23 @@
                     console.log('Window location:', window.location.href);
                     console.log('User agent:', navigator.userAgent);
                     
-                    // Method 1: Try direct text submission (most reliable for compose extensions)
+                    // Method 1: Try structured object submission for bot handler
                     try {
                         if (microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
-                            console.log('Attempting direct text submission...');
-                            console.log('Calling microsoftTeams.tasks.submitTask with:', message);
-                            microsoftTeams.tasks.submitTask(message);
-                            console.log('Direct submission call completed - waiting for Teams response');
+                            console.log('Attempting structured object submission for bot...');
                             
-                            // Wait a moment to see if it worked
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            console.log('Direct text submission completed');
+                            // Use the format our bot expects: { message: "text" }
+                            const submissionData = { message: message };
+                            console.log('Calling microsoftTeams.tasks.submitTask with structured data:', submissionData);
+                            
+                            microsoftTeams.tasks.submitTask(submissionData);
+                            console.log('✅ Structured submission sent to bot - should appear in chat');
+                            
+                            // Update status to show completion
+                            this.updateProcessingStatus('✅ Message sent to chat!', 'The modal will close automatically');
+                            
+                            // Wait a moment then close
+                            await new Promise(resolve => setTimeout(resolve, 3000));
                             return; // Modal should close and text should appear in chat
                         }
                     } catch (err) {
@@ -797,25 +803,34 @@
                 }
                 
                 // Fallback: Copy to clipboard and show instructions
-                console.log('All Teams methods failed, using clipboard fallback');
+                console.log('❌ All Teams SDK methods failed, using clipboard fallback');
                 try {
                     await navigator.clipboard.writeText(message);
                     this.updateProcessingStatus('📋 Copied to clipboard!', 'Close this window and paste (Ctrl+V) in the chat box');
                     
-                    // Show a visual confirmation
-                    console.log('Message copied to clipboard:', message);
+                    console.log('✅ Message copied to clipboard:', message);
                     
-                    // Auto-close after 4 seconds with clear instructions
+                    // Show message in console for manual copy if needed
+                    console.log('=== MANUAL COPY (if clipboard failed) ===');
+                    console.log(message);
+                    console.log('==========================================');
+                    
+                    // Auto-close after 5 seconds with clear instructions
                     setTimeout(() => {
                         console.log('Auto-closing modal after clipboard copy');
                         if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
                             microsoftTeams.tasks.submitTask(null); // Close modal
                         }
                         window.close(); // Fallback close
-                    }, 4000);
+                    }, 5000);
                 } catch (error) {
-                    console.error('Clipboard failed too:', error);
-                    this.updateProcessingStatus('❌ Teams integration failed', 'Try refreshing Teams or use web browser version');
+                    console.error('❌ Clipboard also failed:', error);
+                    this.updateProcessingStatus('📝 Manual copy needed', 'Check console for the processed message');
+                    
+                    // Show message in console for manual copy
+                    console.log('=== COPY THIS MESSAGE MANUALLY ===');
+                    console.log(message);
+                    console.log('==================================');
                 }
             }
 
