@@ -36,25 +36,6 @@ const bot = {
         console.log('Full activity:', JSON.stringify(context.activity, null, 2));
         
         if (context.activity.type === 'invoke') {
-            if (context.activity.name === 'composeExtension/fetchTask') {
-                console.log('=== FETCH TASK HANDLER ===');
-                // Return task module configuration
-                return {
-                    status: 200,
-                    body: {
-                        task: {
-                            type: 'continue',
-                            value: {
-                                title: "🎤 Speak Easy - Record Voice Message",
-                                height: "large", 
-                                width: "large",
-                                url: "https://teamsspeakeasy.onrender.com/voice-recorder"
-                            }
-                        }
-                    }
-                };
-            }
-            
             if (context.activity.name === 'task/submit') {
                 console.log('=== TASK SUBMIT HANDLER ===');
                 const submittedData = context.activity.value || {};
@@ -63,32 +44,23 @@ const bot = {
                 console.log('Submitted data:', JSON.stringify(submittedData, null, 2));
                 console.log('Extracted message:', message);
                 
-                // Try different response formats for compose extensions
-                const responses = [
-                    // Format 1: Simple text response
-                    {
-                        status: 200,
-                        body: typeof message === 'string' ? message : message.toString()
-                    },
-                    // Format 2: Compose extension with text/plain
-                    {
-                        status: 200,
-                        body: {
-                            composeExtension: {
-                                type: 'result',
-                                attachmentLayout: 'list',
-                                attachments: [{
-                                    contentType: 'text/plain',
-                                    content: typeof message === 'string' ? message : message.toString()
-                                }]
-                            }
+                // Return simple text response for task submission
+                const response = {
+                    status: 200,
+                    body: {
+                        composeExtension: {
+                            type: 'result',
+                            attachmentLayout: 'list',
+                            attachments: [{
+                                contentType: 'text/plain',
+                                content: typeof message === 'string' ? message : message.toString()
+                            }]
                         }
                     }
-                ];
+                };
                 
-                // Use the second format (compose extension)
-                console.log('Returning response:', JSON.stringify(responses[1], null, 2));
-                return responses[1];
+                console.log('Returning task submit response:', JSON.stringify(response, null, 2));
+                return response;
             }
         }
         
@@ -394,7 +366,7 @@ Output: "Hey team! Following up on yesterday's Q4 roadmap discussion. Three main
                 }
             ],
             max_completion_tokens: 150,
-            temperature: 0.8,
+            temperature: 1,
         });
 
         // Extract the response content

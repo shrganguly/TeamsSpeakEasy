@@ -42,7 +42,7 @@
                     "description": "Record voice message with Speak Easy",
                     "title": "🎤 Speak Easy",
                     "type": "action",
-                    "fetchTask": true,
+                    "fetchTask": false,
                     "taskInfo": {
                         "title": "🎤 Speak Easy - Record Voice Message",
                         "height": "large",
@@ -72,6 +72,7 @@
         "teamsspeakeasy.onrender.com"
     ]
 }
+
 
 
 
