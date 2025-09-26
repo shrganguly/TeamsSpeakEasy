@@ -305,13 +305,12 @@
             text-align: center;
             padding: 40px 20px;
             min-height: 300px;
-            display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .processing-section.visible {
-            display: flex;
+            display: flex !important;
         }
         
         .processing-animation {
@@ -705,14 +704,14 @@
 
 
             showProcessingView() {
-                // Hide recording section and show processing
-                const recordingSection = document.querySelector('.recorder-container .recording-section');
-                if (recordingSection) recordingSection.style.display = 'none';
+                // Hide all other sections and show processing
+                document.getElementById('permissionSection').style.display = 'none';
+                document.getElementById('recordingSection').style.display = 'none';
+                document.getElementById('desktopWarning').style.display = 'none';
                 
-                const desktopWarning = document.getElementById('desktopWarning');
-                if (desktopWarning) desktopWarning.style.display = 'none';
-                
+                // Show processing section
                 document.getElementById('processingSection').classList.add('visible');
+                console.log('Processing view shown');
             }
             
             updateProcessingStatus(title, subtitle) {
@@ -727,35 +726,78 @@
                 // Wait a moment for user to see completion
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // Try to submit to Teams
+                // Try multiple Teams SDK approaches
                 if (typeof microsoftTeams !== 'undefined') {
+                    console.log('Auto-submitting message:', message);
+                    console.log('Teams SDK capabilities:', {
+                        tasks: !!microsoftTeams.tasks,
+                        submitTask: !!(microsoftTeams.tasks && microsoftTeams.tasks.submitTask),
+                        dialog: !!microsoftTeams.dialog
+                    });
+                    
+                    // Method 1: Try direct text submission (most reliable for compose extensions)
                     try {
-                        console.log('Auto-submitting message:', message);
-                        
-                        // Submit the text directly to Teams compose box
                         if (microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
+                            console.log('Attempting direct text submission...');
                             microsoftTeams.tasks.submitTask(message);
-                            console.log('Message submitted successfully');
-                            return; // Modal will close automatically
+                            console.log('Direct submission successful');
+                            return; // Modal should close and text should appear in chat
                         }
                     } catch (err) {
-                        console.log('Auto-submit failed:', err);
+                        console.log('Direct submission failed:', err);
+                    }
+                    
+                    // Method 2: Try with message object wrapper
+                    try {
+                        if (microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
+                            console.log('Attempting message object submission...');
+                            microsoftTeams.tasks.submitTask({ message: message });
+                            console.log('Message object submission successful');
+                            return;
+                        }
+                    } catch (err) {
+                        console.log('Message object submission failed:', err);
+                    }
+                    
+                    // Method 3: Try compose extension format
+                    try {
+                        if (microsoftTeams.tasks && microsoftTeams.tasks.submitTask) {
+                            console.log('Attempting compose extension format...');
+                            const composeResult = {
+                                composeExtension: {
+                                    type: "result",
+                                    attachmentLayout: "list", 
+                                    attachments: [{
+                                        contentType: "text/plain",
+                                        content: message
+                                    }]
+                                }
+                            };
+                            microsoftTeams.tasks.submitTask(composeResult);
+                            console.log('Compose extension submission successful');
+                            return;
+                        }
+                    } catch (err) {
+                        console.log('Compose extension submission failed:', err);
                     }
                 }
                 
                 // Fallback: Copy to clipboard and show instructions
+                console.log('All Teams methods failed, using clipboard fallback');
                 try {
                     await navigator.clipboard.writeText(message);
                     this.updateProcessingStatus('📋 Copied to clipboard!', 'Close this window and paste (Ctrl+V) in chat');
                     
-                    // Auto-close after 3 seconds
+                    // Auto-close after 5 seconds with clear instructions
                     setTimeout(() => {
                         if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                            microsoftTeams.tasks.submitTask(null); // Close without result
+                            microsoftTeams.tasks.submitTask(null); // Close modal
                         }
-                    }, 3000);
+                        window.close(); // Fallback close
+                    }, 5000);
                 } catch (error) {
-                    this.updateProcessingStatus('❌ Auto-submit failed', 'Please click the extension again to try');
+                    console.error('Clipboard failed too:', error);
+                    this.updateProcessingStatus('❌ Unable to insert', 'Please manually copy the text above and paste in chat');
                 }
             }
 
