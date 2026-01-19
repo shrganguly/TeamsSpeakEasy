@@ -858,11 +858,10 @@
                         
                         <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin: 15px 0; border: 2px solid #6264A7;">
                             <div style="font-weight: bold; color: #6264A7; margin-bottom: 10px;">${copyStatus}</div>
-                            <div style="background: white; padding: 15px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #6264A7; text-align: left;">
-                                <strong style="color: #6264A7;">Your processed message:</strong><br><br>
-                                <div style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.4; color: #333; font-style: italic;">
-                                    "${message}"
-                                </div>
+                            <div style="background: white; padding: 10px; border-radius: 6px; margin: 10px 0; border-left: 4px solid #6264A7; text-align: left;">
+                                <strong style="color: #6264A7;">Your processed message:</strong><br>
+                                <textarea id="finalMessageText" readonly style="width: 100%; min-height: 80px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; margin-top: 10px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.4; color: #333; resize: vertical; user-select: text; -webkit-user-select: text;">${message}</textarea>
+                                <small style="color: #666; font-style: italic;">☝️ Tap to select and copy if needed</small>
                             </div>
                         </div>
                         
@@ -896,21 +895,58 @@
 
                 // Add event listeners
                 document.getElementById('manualCopyBtn').addEventListener('click', async () => {
+                    const textarea = document.getElementById('finalMessageText');
+
                     try {
+                        // First try clipboard API
                         await navigator.clipboard.writeText(message);
                         document.getElementById('copyStatus').innerHTML = '✅ Copied! Now paste in Teams chat.';
                         document.getElementById('manualCopyBtn').textContent = '✅ Copied!';
+
+                        // Also select the text for visual feedback
+                        textarea.select();
+                        textarea.setSelectionRange(0, textarea.value.length);
                     } catch (error) {
-                        document.getElementById('copyStatus').innerHTML = '❌ Copy failed - select text above manually';
+                        console.log('Clipboard API failed, trying manual selection:', error);
+
+                        // Fallback: Select text and try execCommand
+                        try {
+                            textarea.select();
+                            textarea.setSelectionRange(0, textarea.value.length);
+                            document.execCommand('copy');
+                            document.getElementById('copyStatus').innerHTML = '✅ Copied! Now paste in Teams chat.';
+                            document.getElementById('manualCopyBtn').textContent = '✅ Copied!';
+                        } catch (execError) {
+                            // Last resort: just select the text for manual copy
+                            textarea.select();
+                            textarea.setSelectionRange(0, textarea.value.length);
+                            document.getElementById('copyStatus').innerHTML = '📋 Text selected - tap "Copy" in menu';
+                            document.getElementById('manualCopyBtn').textContent = '📋 Text Selected';
+                        }
                     }
                 });
                 
-                document.getElementById('closeBtn').addEventListener('click', () => {
-                    // Close the modal
+                document.getElementById('closeBtn').addEventListener('click', async () => {
+                    console.log('=== CLOSE & PASTE CLICKED ===');
+                    console.log('Attempting to submit message to Teams:', message);
+                    console.log('fetchTask mode: false (direct URL)');
+
+                    // Update UI immediately
+                    document.getElementById('copyStatus').innerHTML = '📋 Already copied! Close and paste in chat.';
+
+                    // With fetchTask: false, submitTask just closes the modal
+                    // The message is already in clipboard, so user needs to paste manually
                     if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                        microsoftTeams.tasks.submitTask(null); // Close modal
+                        console.log('Closing modal - message in clipboard for manual paste');
+
+                        // Small delay so user can see the status message
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                        // Close the task module
+                        microsoftTeams.tasks.submitTask(null);
+                    } else {
+                        window.close();
                     }
-                    window.close(); // Fallback close
                 });
             }
             
