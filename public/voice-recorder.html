@@ -840,7 +840,17 @@
                 
                 // Hide processing section
                 document.getElementById('processingSection').classList.remove('visible');
-                
+
+                // Try to copy to clipboard immediately
+                let copyStatus = '📋 Message copied to clipboard!';
+                try {
+                    await navigator.clipboard.writeText(message);
+                    console.log('✅ Auto-copied to clipboard');
+                } catch (error) {
+                    console.log('❌ Auto-copy failed:', error);
+                    copyStatus = '📋 Click "Copy" button below';
+                }
+
                 // Show result with clear copy instructions
                 const resultHTML = `
                     <div class="result-section" style="text-align: center; padding: 20px;">
@@ -881,8 +891,9 @@
                 
                 // Replace processing content
                 const container = document.querySelector('.recorder-container');
-                container.innerHTML = resultHTML + container.querySelector('div[style*="text-align: center; margin-top: 20px"]').outerHTML;
-                
+                const versionDiv = container.querySelector('div[style*="text-align: center; margin-top: 20px"]');
+                container.innerHTML = resultHTML + (versionDiv ? versionDiv.outerHTML : '<div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">🎤 Speak Easy v1.0.10 | fetchTask: false | Direct Insert Mode</div>');
+
                 // Add event listeners
                 document.getElementById('manualCopyBtn').addEventListener('click', async () => {
                     try {
