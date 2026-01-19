@@ -39,8 +39,11 @@ const bot = {
             if (context.activity.name === 'task/fetch') {
                 console.log('=== TASK FETCH HANDLER ===');
                 console.log('Handling task/fetch for compose extension');
-                
-                // Return task module configuration
+
+                // Get base URL from environment or use default
+                const baseUrl = process.env.TEAMS_APP_BASE_URL || 'https://teamsspeakeasy.onrender.com';
+
+                // Return task module configuration with cache-busting endpoint
                 const response = {
                     status: 200,
                     body: {
@@ -50,24 +53,34 @@ const bot = {
                                 title: '🎤 Speak Easy - Record Voice Message',
                                 height: 'large',
                                 width: 'large',
-                                url: 'https://teamsspeakeasy.onrender.com/voice-recorder'
+                                url: `${baseUrl}/voice-recorder-v2`
                             }
                         }
                     }
                 };
-                
+
                 console.log('Returning task fetch response:', JSON.stringify(response, null, 2));
                 return response;
             }
             else if (context.activity.name === 'task/submit') {
                 console.log('=== TASK SUBMIT HANDLER ===');
                 const submittedData = context.activity.value || {};
-                const message = submittedData.message || submittedData;
-                
+                const message = submittedData.message || submittedData.text || submittedData;
+
                 console.log('Submitted data:', JSON.stringify(submittedData, null, 2));
                 console.log('Extracted message:', message);
-                
-                // Return simple text response for task submission
+
+                // If no message, just close the task module
+                if (!message || (typeof message === 'object' && !message.message && !message.text)) {
+                    console.log('No message provided, closing task module');
+                    return { status: 200, body: {} };
+                }
+
+                const messageText = typeof message === 'string' ? message : (message.message || message.text || JSON.stringify(message));
+                console.log('Final message text to insert:', messageText);
+
+                // Return compose extension result to insert text into compose box
+                // Using the message format that tells Teams to insert the text
                 const response = {
                     status: 200,
                     body: {
@@ -75,14 +88,23 @@ const bot = {
                             type: 'result',
                             attachmentLayout: 'list',
                             attachments: [{
-                                contentType: 'text/plain',
-                                content: typeof message === 'string' ? message : message.toString()
+                                contentType: 'application/vnd.microsoft.card.adaptive',
+                                content: {
+                                    type: 'AdaptiveCard',
+                                    body: [{
+                                        type: 'TextBlock',
+                                        text: messageText,
+                                        wrap: true
+                                    }],
+                                    $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+                                    version: '1.4'
+                                }
                             }]
                         }
                     }
                 };
-                
-                console.log('Returning task submit response:', JSON.stringify(response, null, 2));
+
+                console.log('Returning task submit response for text insertion:', JSON.stringify(response, null, 2));
                 return response;
             }
         }
