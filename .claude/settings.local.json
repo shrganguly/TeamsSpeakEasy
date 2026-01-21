@@ -11,7 +11,8 @@
       "Bash(powershell.exe -Command \"Compress-Archive -Path ''appPackage/*'' -DestinationPath ''SpeakEasy-v1.0.15-AutoInsert-WORKING.zip'' -Force\")",
       "Bash(powershell.exe -Command \"Get-Item SpeakEasy-v1.0.15-AutoInsert-WORKING.zip | Select-Object Name, Length, LastWriteTime\")",
       "Bash(curl:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(python -m json.tool:*)"
     ]
   }
 }

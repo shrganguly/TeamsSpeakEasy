@@ -44,9 +44,10 @@ const bot = {
         console.log('Full activity:', JSON.stringify(context.activity, null, 2));
         
         if (context.activity.type === 'invoke') {
-            if (context.activity.name === 'task/fetch') {
+            if (context.activity.name === 'composeExtension/fetchTask' || context.activity.name === 'task/fetch') {
                 console.log('=== TASK FETCH HANDLER ===');
                 console.log('Handling task/fetch for compose extension');
+                console.log('Activity name:', context.activity.name);
 
                 // Get base URL from environment or use default
                 const baseUrl = process.env.TEAMS_APP_BASE_URL || 'https://teamsspeakeasy.onrender.com';
@@ -70,7 +71,7 @@ const bot = {
                 console.log('Returning task fetch response:', JSON.stringify(response, null, 2));
                 return response;
             }
-            else if (context.activity.name === 'task/submit') {
+            else if (context.activity.name === 'composeExtension/submitAction' || context.activity.name === 'task/submit') {
                 console.log('=== TASK SUBMIT HANDLER ===');
                 const submittedData = context.activity.value || {};
                 const message = submittedData.message || submittedData.text || submittedData;
