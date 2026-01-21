@@ -74,19 +74,23 @@ const bot = {
             else if (context.activity.name === 'composeExtension/submitAction' || context.activity.name === 'task/submit') {
                 console.log('=== TASK SUBMIT HANDLER ===');
                 const submittedData = context.activity.value || {};
-                const message = submittedData.message || submittedData.text || submittedData;
 
                 console.log('Submitted data:', JSON.stringify(submittedData, null, 2));
+
+                // Teams wraps the data in a 'data' property when using task modules
+                const dataPayload = submittedData.data || submittedData;
+                const message = dataPayload.message || dataPayload.text;
+
                 console.log('Extracted message:', message);
 
                 // If no message, just close the task module
-                if (!message || (typeof message === 'object' && !message.message && !message.text)) {
+                if (!message) {
                     console.log('No message provided, closing task module');
                     await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: {} } });
                     return;
                 }
 
-                const messageText = typeof message === 'string' ? message : (message.message || message.text || JSON.stringify(message));
+                const messageText = typeof message === 'string' ? message : JSON.stringify(message);
                 console.log('Final message text to insert:', messageText);
 
                 // For plain text insertion into compose box, use message format
