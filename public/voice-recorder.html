@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.16 | fetchTask: true | WORKING
+            🎤 Speak Easy v1.0.22 | Auto-Copy to Clipboard
         </div>
     </div>
 
@@ -880,7 +880,7 @@
                                 � Copy Again
                             </button>
                             <button id="closeBtn" class="action-button" style="background: #28a745; color: white; padding: 12px 20px;">
-                                ✅ Close & Paste
+                                ✅ Close Window
                             </button>
                         </div>
                         
@@ -927,49 +927,21 @@
                 });
                 
                 document.getElementById('closeBtn').addEventListener('click', async () => {
-                    console.log('=== CLOSE & PASTE CLICKED ===');
-                    console.log('Message to insert:', message);
-                    console.log('Mode: fetchTask: true - using bot handler for auto-insert');
+                    console.log('=== CLOSE CLICKED ===');
+                    console.log('Message already copied to clipboard:', message);
+                    console.log('Mode: fetchTask: false - user will paste manually');
 
-                    // Update UI
-                    document.getElementById('copyStatus').innerHTML = '⏳ Inserting into chat...';
+                    // Message is already copied to clipboard from showResult()
+                    // Just close the window
+                    document.getElementById('copyStatus').innerHTML = '✅ Copied! Close this window and paste in chat.';
 
-                    try {
+                    setTimeout(() => {
                         if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                            // With fetchTask: true, submit to bot handler
-                            // Bot will return properly formatted response for auto-insertion
-                            console.log('Submitting to bot handler...');
-
-                            microsoftTeams.tasks.submitTask({
-                                message: message,
-                                text: message
-                            });
-
-                            console.log('✅ Submitted to bot - Teams should auto-insert text');
-                            document.getElementById('copyStatus').innerHTML = '✅ Message inserted into chat!';
+                            microsoftTeams.tasks.submitTask(null);
                         } else {
-                            console.log('Teams SDK not available - fallback to clipboard');
-                            await navigator.clipboard.writeText(message);
-                            document.getElementById('copyStatus').innerHTML = '📋 Copied! Paste in chat';
-                            setTimeout(() => window.close(), 2000);
+                            window.close();
                         }
-                    } catch (error) {
-                        console.error('Submit failed:', error);
-
-                        // Fallback to clipboard
-                        try {
-                            await navigator.clipboard.writeText(message);
-                            document.getElementById('copyStatus').innerHTML = '📋 Copied to clipboard! Paste in chat';
-                        } catch (clipError) {
-                            document.getElementById('copyStatus').innerHTML = '❌ Failed - copy text above manually';
-                        }
-
-                        setTimeout(() => {
-                            if (microsoftTeams && microsoftTeams.tasks) {
-                                microsoftTeams.tasks.submitTask(null);
-                            }
-                        }, 2000);
-                    }
+                    }, 500);
                 });
             }
             
