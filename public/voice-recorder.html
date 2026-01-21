@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.23 | Editable Message Preview
+            🎤 Speak Easy v1.0.24 | Quick Card Insert
         </div>
     </div>
 
@@ -929,22 +929,21 @@
                 document.getElementById('closeBtn').addEventListener('click', async () => {
                     console.log('=== CONTINUE CLICKED ===');
                     console.log('Message to submit:', message);
-                    console.log('Mode: fetchTask: true - botMessagePreview for editable text');
+                    console.log('Mode: fetchTask: true - inserting as Hero Card');
 
-                    document.getElementById('copyStatus').innerHTML = '⏳ Preparing message...';
+                    document.getElementById('copyStatus').innerHTML = '⏳ Inserting message card...';
 
                     try {
                         if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                            // Submit to bot which will return botMessagePreview
-                            // This shows an editable preview before sending
-                            console.log('Submitting to bot for message preview...');
+                            // Submit to bot which will insert as a card
+                            console.log('Submitting to bot...');
 
                             microsoftTeams.tasks.submitTask({
                                 message: message,
                                 text: message
                             });
 
-                            console.log('✅ Submitted - Teams will show editable preview');
+                            console.log('✅ Submitted - Teams will insert as card');
                         } else {
                             console.log('Teams SDK not available - fallback to clipboard');
                             await navigator.clipboard.writeText(message);
