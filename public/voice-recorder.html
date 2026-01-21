@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.25 | Plain Text Experiment
+            🎤 Speak Easy v1.0.26 | Auto-Copy Plain Text
         </div>
     </div>
 
@@ -880,7 +880,7 @@
                                 � Copy Again
                             </button>
                             <button id="closeBtn" class="action-button" style="background: #28a745; color: white; padding: 12px 20px;">
-                                ✅ Continue
+                                ✅ Close & Paste
                             </button>
                         </div>
                         
@@ -927,38 +927,21 @@
                 });
                 
                 document.getElementById('closeBtn').addEventListener('click', async () => {
-                    console.log('=== CONTINUE CLICKED ===');
-                    console.log('Message to submit:', message);
-                    console.log('Mode: fetchTask: true - inserting as Hero Card');
+                    console.log('=== CLOSE CLICKED ===');
+                    console.log('Message already in clipboard:', message);
+                    console.log('Mode: fetchTask: false - clipboard workflow for plain text');
 
-                    document.getElementById('copyStatus').innerHTML = '⏳ Inserting message card...';
+                    // Message is already copied to clipboard from showResult()
+                    // Just close the window so user can paste
+                    document.getElementById('copyStatus').innerHTML = '✅ Ready to paste! Close this window and paste in chat.';
 
-                    try {
+                    setTimeout(() => {
                         if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                            // Submit to bot which will insert as a card
-                            console.log('Submitting to bot...');
-
-                            microsoftTeams.tasks.submitTask({
-                                message: message,
-                                text: message
-                            });
-
-                            console.log('✅ Submitted - Teams will insert as card');
+                            microsoftTeams.tasks.submitTask(null);
                         } else {
-                            console.log('Teams SDK not available - fallback to clipboard');
-                            await navigator.clipboard.writeText(message);
-                            document.getElementById('copyStatus').innerHTML = '📋 Copied! Paste in chat';
-                            setTimeout(() => window.close(), 2000);
+                            window.close();
                         }
-                    } catch (error) {
-                        console.error('Submit failed:', error);
-                        try {
-                            await navigator.clipboard.writeText(message);
-                            document.getElementById('copyStatus').innerHTML = '📋 Copied to clipboard! Paste in chat';
-                        } catch (clipError) {
-                            document.getElementById('copyStatus').innerHTML = '❌ Failed - copy text manually';
-                        }
-                    }
+                    }, 500);
                 });
             }
             
