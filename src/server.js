@@ -8,14 +8,22 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Bot Framework setup
-const credentialsFactory = new ConfigurationServiceClientCredentialFactory({
-    MicrosoftAppId: process.env.MICROSOFT_APP_ID,
-    MicrosoftAppPassword: process.env.MICROSOFT_APP_PASSWORD,
-    MicrosoftAppType: process.env.MICROSOFT_APP_TYPE || 'MultiTenant',
-    MicrosoftAppTenantId: process.env.MICROSOFT_APP_TENANT_ID
-});
+// Bot Framework setup - use correct env variable names from .env file
+const botConfig = {
+    MicrosoftAppId: process.env.MicrosoftAppId || process.env.MICROSOFT_APP_ID,
+    MicrosoftAppPassword: process.env.MicrosoftAppPassword || process.env.MICROSOFT_APP_PASSWORD,
+    MicrosoftAppType: process.env.MicrosoftAppType || process.env.MICROSOFT_APP_TYPE || 'MultiTenant',
+    MicrosoftAppTenantId: process.env.MicrosoftAppTenantId || process.env.MICROSOFT_APP_TENANT_ID
+};
 
+// Log bot configuration (mask password for security)
+console.log('🤖 Bot Framework Configuration:');
+console.log('  App ID:', botConfig.MicrosoftAppId ? `${botConfig.MicrosoftAppId.substring(0, 8)}...` : 'NOT SET');
+console.log('  App Password:', botConfig.MicrosoftAppPassword ? '***CONFIGURED***' : 'NOT SET');
+console.log('  App Type:', botConfig.MicrosoftAppType);
+console.log('  Tenant ID:', botConfig.MicrosoftAppTenantId || 'Not specified (MultiTenant)');
+
+const credentialsFactory = new ConfigurationServiceClientCredentialFactory(botConfig);
 const botFrameworkAuthentication = createBotFrameworkAuthenticationFromConfiguration(null, credentialsFactory);
 const adapter = new CloudAdapter(botFrameworkAuthentication);
 
