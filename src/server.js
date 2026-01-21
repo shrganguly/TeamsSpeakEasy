@@ -134,6 +134,18 @@ app.post('/api/messages', async (req, res) => {
     await adapter.process(req, res, (context) => bot.run(context));
 });
 
+// Diagnostic endpoint to check bot configuration
+app.get('/api/bot-status', (req, res) => {
+    res.json({
+        botConfigured: !!(botConfig.MicrosoftAppId && botConfig.MicrosoftAppPassword),
+        appIdPresent: !!botConfig.MicrosoftAppId,
+        appIdPrefix: botConfig.MicrosoftAppId ? botConfig.MicrosoftAppId.substring(0, 8) + '...' : 'NOT SET',
+        passwordPresent: !!botConfig.MicrosoftAppPassword,
+        appType: botConfig.MicrosoftAppType,
+        messagingEndpoint: process.env.TEAMS_APP_BASE_URL + '/api/messages'
+    });
+});
+
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
