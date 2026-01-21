@@ -93,35 +93,56 @@ const bot = {
                 const messageText = typeof message === 'string' ? message : JSON.stringify(message);
                 console.log('Final message text to insert:', messageText);
 
-                // For text insertion, return a simple text-based Hero Card
-                // This will be inserted into the compose box
+                // Try botMessagePreview approach - shows editable message preview
                 const response = {
                     composeExtension: {
-                        type: 'result',
-                        attachmentLayout: 'list',
-                        attachments: [{
-                            contentType: 'application/vnd.microsoft.card.hero',
-                            content: {
-                                text: messageText
-                            },
-                            preview: {
-                                contentType: 'application/vnd.microsoft.card.hero',
-                                content: {
-                                    text: messageText
-                                }
-                            }
-                        }]
+                        type: 'botMessagePreview',
+                        activityPreview: {
+                            type: 'message',
+                            text: messageText,
+                            attachments: []
+                        }
                     }
                 };
 
-                console.log('Returning task submit response for text insertion:', JSON.stringify(response, null, 2));
+                console.log('Returning botMessagePreview response:', JSON.stringify(response, null, 2));
 
                 // For invoke activities, send invoke response
                 await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: response } });
                 return;
             }
+            else if (context.activity.name === 'composeExtension/submitAction' && context.activity.value.botMessagePreviewAction) {
+                // Handle the send/edit actions from the message preview
+                const action = context.activity.value.botMessagePreviewAction;
+                console.log('=== BOT MESSAGE PREVIEW ACTION ===');
+                console.log('Action:', action);
+
+                if (action === 'send') {
+                    // User clicked "Send" - just acknowledge
+                    console.log('User confirmed send');
+                    await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: {} } });
+                    return;
+                } else if (action === 'edit') {
+                    // User clicked "Edit" - show the task module again
+                    console.log('User wants to edit');
+                    const baseUrl = process.env.TEAMS_APP_BASE_URL || 'https://teamsspeakeasy.onrender.com';
+                    const editResponse = {
+                        task: {
+                            type: 'continue',
+                            value: {
+                                title: '🎤 Speak Easy - Edit Message',
+                                height: 'large',
+                                width: 'large',
+                                url: `${baseUrl}/voice-recorder-v2`
+                            }
+                        }
+                    };
+                    await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: editResponse } });
+                    return;
+                }
+            }
         }
-        
+
         // Default response for other activities
         if (context.activity.type === 'message') {
             await context.sendActivity('Voice Message Extension is ready! Use the compose extension to record voice messages.');

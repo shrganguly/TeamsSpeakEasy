@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.22 | Auto-Copy to Clipboard
+            🎤 Speak Easy v1.0.23 | Editable Message Preview
         </div>
     </div>
 
@@ -880,7 +880,7 @@
                                 � Copy Again
                             </button>
                             <button id="closeBtn" class="action-button" style="background: #28a745; color: white; padding: 12px 20px;">
-                                ✅ Close Window
+                                ✅ Continue
                             </button>
                         </div>
                         
@@ -927,21 +927,39 @@
                 });
                 
                 document.getElementById('closeBtn').addEventListener('click', async () => {
-                    console.log('=== CLOSE CLICKED ===');
-                    console.log('Message already copied to clipboard:', message);
-                    console.log('Mode: fetchTask: false - user will paste manually');
+                    console.log('=== CONTINUE CLICKED ===');
+                    console.log('Message to submit:', message);
+                    console.log('Mode: fetchTask: true - botMessagePreview for editable text');
 
-                    // Message is already copied to clipboard from showResult()
-                    // Just close the window
-                    document.getElementById('copyStatus').innerHTML = '✅ Copied! Close this window and paste in chat.';
+                    document.getElementById('copyStatus').innerHTML = '⏳ Preparing message...';
 
-                    setTimeout(() => {
+                    try {
                         if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                            microsoftTeams.tasks.submitTask(null);
+                            // Submit to bot which will return botMessagePreview
+                            // This shows an editable preview before sending
+                            console.log('Submitting to bot for message preview...');
+
+                            microsoftTeams.tasks.submitTask({
+                                message: message,
+                                text: message
+                            });
+
+                            console.log('✅ Submitted - Teams will show editable preview');
                         } else {
-                            window.close();
+                            console.log('Teams SDK not available - fallback to clipboard');
+                            await navigator.clipboard.writeText(message);
+                            document.getElementById('copyStatus').innerHTML = '📋 Copied! Paste in chat';
+                            setTimeout(() => window.close(), 2000);
                         }
-                    }, 500);
+                    } catch (error) {
+                        console.error('Submit failed:', error);
+                        try {
+                            await navigator.clipboard.writeText(message);
+                            document.getElementById('copyStatus').innerHTML = '📋 Copied to clipboard! Paste in chat';
+                        } catch (clipError) {
+                            document.getElementById('copyStatus').innerHTML = '❌ Failed - copy text manually';
+                        }
+                    }
                 });
             }
             
