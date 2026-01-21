@@ -89,25 +89,12 @@ const bot = {
                 const messageText = typeof message === 'string' ? message : (message.message || message.text || JSON.stringify(message));
                 console.log('Final message text to insert:', messageText);
 
-                // Return compose extension result to insert text into compose box
-                // Bot Framework expects just the body, not wrapped in status/body
+                // For plain text insertion into compose box, use message format
+                // This inserts text directly without rendering a card
                 const response = {
                     composeExtension: {
-                        type: 'result',
-                        attachmentLayout: 'list',
-                        attachments: [{
-                            contentType: 'application/vnd.microsoft.card.adaptive',
-                            content: {
-                                type: 'AdaptiveCard',
-                                body: [{
-                                    type: 'TextBlock',
-                                    text: messageText,
-                                    wrap: true
-                                }],
-                                $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-                                version: '1.4'
-                            }
-                        }]
+                        type: 'message',
+                        text: messageText
                     }
                 };
 
