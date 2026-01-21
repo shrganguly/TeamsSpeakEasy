@@ -3,7 +3,10 @@
     "allow": [
       "Bash(pwsh:*)",
       "Bash(git checkout:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(powershell.exe -Command \"Compress-Archive -Path ''appPackage/*'' -DestinationPath ''SpeakEasy-v1.0.13-AutoInsert-Fixed.zip'' -Force\")",
+      "Bash(powershell.exe -Command \"Get-Item SpeakEasy-v1.0.13-AutoInsert-Fixed.zip | Select-Object Name, Length, LastWriteTime\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nRevert to fetchTask: false - bot auth still failing\n\nAfter investigation: fetchTask: true fails because bot authentication\nisn''t working, likely due to Azure Bot Service configuration issues\nbeyond the environment variable naming.\n\nSince automatic text insertion REQUIRES fetchTask: true with working\nbot auth, and that''s not possible right now, reverting to reliable\nclipboard-based workflow.\n\nVersion 1.0.14 - fetchTask: false with enhanced submit attempts\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
