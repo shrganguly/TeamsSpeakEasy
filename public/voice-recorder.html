@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.26 | Auto-Copy Plain Text
+            🎤 Speak Easy v1.0.27 | Enhanced Copy
         </div>
     </div>
 
@@ -841,14 +841,40 @@
                 // Hide processing section
                 document.getElementById('processingSection').classList.remove('visible');
 
-                // Try to copy to clipboard immediately
-                let copyStatus = '📋 Message copied to clipboard!';
+                // Try to copy to clipboard immediately - use multiple methods
+                let copyStatus = '📋 Click "Copy" button to copy message';
+                let copySuccess = false;
+
+                // Method 1: Try modern clipboard API
                 try {
                     await navigator.clipboard.writeText(message);
-                    console.log('✅ Auto-copied to clipboard');
+                    console.log('✅ Auto-copied via Clipboard API');
+                    copyStatus = '✅ Message copied to clipboard!';
+                    copySuccess = true;
                 } catch (error) {
-                    console.log('❌ Auto-copy failed:', error);
-                    copyStatus = '📋 Click "Copy" button below';
+                    console.log('❌ Clipboard API failed:', error);
+
+                    // Method 2: Try execCommand with temporary textarea
+                    try {
+                        const tempTextarea = document.createElement('textarea');
+                        tempTextarea.value = message;
+                        tempTextarea.style.position = 'fixed';
+                        tempTextarea.style.opacity = '0';
+                        document.body.appendChild(tempTextarea);
+                        tempTextarea.select();
+                        tempTextarea.setSelectionRange(0, message.length);
+
+                        const success = document.execCommand('copy');
+                        document.body.removeChild(tempTextarea);
+
+                        if (success) {
+                            console.log('✅ Auto-copied via execCommand');
+                            copyStatus = '✅ Message copied to clipboard!';
+                            copySuccess = true;
+                        }
+                    } catch (execError) {
+                        console.log('❌ execCommand also failed:', execError);
+                    }
                 }
 
                 // Show result with clear copy instructions
