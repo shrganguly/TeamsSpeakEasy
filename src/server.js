@@ -52,18 +52,15 @@ const bot = {
                 // Get base URL from environment or use default
                 const baseUrl = process.env.TEAMS_APP_BASE_URL || 'https://teamsspeakeasy.onrender.com';
 
-                // Return task module configuration with cache-busting endpoint
+                // Return task module configuration - Bot Framework expects just the body
                 const response = {
-                    status: 200,
-                    body: {
-                        task: {
-                            type: 'continue',
-                            value: {
-                                title: '🎤 Speak Easy - Record Voice Message',
-                                height: 'large',
-                                width: 'large',
-                                url: `${baseUrl}/voice-recorder-v2`
-                            }
+                    task: {
+                        type: 'continue',
+                        value: {
+                            title: '🎤 Speak Easy - Record Voice Message',
+                            height: 'large',
+                            width: 'large',
+                            url: `${baseUrl}/voice-recorder-v2`
                         }
                     }
                 };
@@ -82,34 +79,31 @@ const bot = {
                 // If no message, just close the task module
                 if (!message || (typeof message === 'object' && !message.message && !message.text)) {
                     console.log('No message provided, closing task module');
-                    return { status: 200, body: {} };
+                    return {};
                 }
 
                 const messageText = typeof message === 'string' ? message : (message.message || message.text || JSON.stringify(message));
                 console.log('Final message text to insert:', messageText);
 
                 // Return compose extension result to insert text into compose box
-                // Using the message format that tells Teams to insert the text
+                // Bot Framework expects just the body, not wrapped in status/body
                 const response = {
-                    status: 200,
-                    body: {
-                        composeExtension: {
-                            type: 'result',
-                            attachmentLayout: 'list',
-                            attachments: [{
-                                contentType: 'application/vnd.microsoft.card.adaptive',
-                                content: {
-                                    type: 'AdaptiveCard',
-                                    body: [{
-                                        type: 'TextBlock',
-                                        text: messageText,
-                                        wrap: true
-                                    }],
-                                    $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-                                    version: '1.4'
-                                }
-                            }]
-                        }
+                    composeExtension: {
+                        type: 'result',
+                        attachmentLayout: 'list',
+                        attachments: [{
+                            contentType: 'application/vnd.microsoft.card.adaptive',
+                            content: {
+                                type: 'AdaptiveCard',
+                                body: [{
+                                    type: 'TextBlock',
+                                    text: messageText,
+                                    wrap: true
+                                }],
+                                $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+                                version: '1.4'
+                            }
+                        }]
                     }
                 };
 
