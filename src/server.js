@@ -93,22 +93,20 @@ const bot = {
                 const messageText = typeof message === 'string' ? message : JSON.stringify(message);
                 console.log('Final message text to insert:', messageText);
 
-                // Action-based messaging extensions can only insert cards, not plain text
-                // Use a minimal Hero Card with just text - closest to plain text we can get
+                // Try returning plain text with text property
+                // Some docs suggest this might insert as plain text
                 const response = {
                     composeExtension: {
                         type: 'result',
                         attachmentLayout: 'list',
                         attachments: [{
-                            contentType: 'application/vnd.microsoft.card.hero',
-                            content: {
-                                text: messageText
-                            }
+                            contentType: 'text/plain',
+                            content: messageText
                         }]
                     }
                 };
 
-                console.log('Returning Hero Card response:', JSON.stringify(response, null, 2));
+                console.log('Returning text/plain response:', JSON.stringify(response, null, 2));
 
                 // For invoke activities, send invoke response
                 await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: response } });
