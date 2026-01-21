@@ -93,12 +93,24 @@ const bot = {
                 const messageText = typeof message === 'string' ? message : JSON.stringify(message);
                 console.log('Final message text to insert:', messageText);
 
-                // For plain text insertion into compose box, use message format
-                // This inserts text directly without rendering a card
+                // For text insertion, return a simple text-based Hero Card
+                // This will be inserted into the compose box
                 const response = {
                     composeExtension: {
-                        type: 'message',
-                        text: messageText
+                        type: 'result',
+                        attachmentLayout: 'list',
+                        attachments: [{
+                            contentType: 'application/vnd.microsoft.card.hero',
+                            content: {
+                                text: messageText
+                            },
+                            preview: {
+                                contentType: 'application/vnd.microsoft.card.hero',
+                                content: {
+                                    text: messageText
+                                }
+                            }
+                        }]
                     }
                 };
 
