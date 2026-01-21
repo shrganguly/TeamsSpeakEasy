@@ -66,7 +66,10 @@ const bot = {
                 };
 
                 console.log('Returning task fetch response:', JSON.stringify(response, null, 2));
-                return response;
+
+                // For invoke activities, send invoke response
+                await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: response } });
+                return;
             }
             else if (context.activity.name === 'composeExtension/submitAction' || context.activity.name === 'task/submit') {
                 console.log('=== TASK SUBMIT HANDLER ===');
@@ -79,7 +82,8 @@ const bot = {
                 // If no message, just close the task module
                 if (!message || (typeof message === 'object' && !message.message && !message.text)) {
                     console.log('No message provided, closing task module');
-                    return {};
+                    await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: {} } });
+                    return;
                 }
 
                 const messageText = typeof message === 'string' ? message : (message.message || message.text || JSON.stringify(message));
@@ -108,7 +112,10 @@ const bot = {
                 };
 
                 console.log('Returning task submit response for text insertion:', JSON.stringify(response, null, 2));
-                return response;
+
+                // For invoke activities, send invoke response
+                await context.sendActivity({ type: 'invokeResponse', value: { status: 200, body: response } });
+                return;
             }
         }
         
