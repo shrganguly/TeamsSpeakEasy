@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.11 | fetchTask: true | Bot Auto-Insert Mode
+            🎤 Speak Easy v1.0.12 | fetchTask: false | Clipboard Mode
         </div>
     </div>
 
@@ -927,37 +927,68 @@
                 });
                 
                 document.getElementById('closeBtn').addEventListener('click', async () => {
-                    console.log('=== CLOSE & INSERT TO CHAT CLICKED ===');
-                    console.log('Attempting to submit message to Teams:', message);
-                    console.log('fetchTask mode: TRUE - using bot handler for auto-insert');
+                    console.log('=== CLOSE & PASTE CLICKED ===');
+                    console.log('Message to insert:', message);
 
-                    // Update UI immediately
-                    document.getElementById('copyStatus').innerHTML = '⏳ Inserting into chat...';
+                    // Update UI
+                    document.getElementById('copyStatus').innerHTML = '⏳ Preparing to insert...';
 
-                    // With fetchTask: true, submitTask sends data to bot handler
-                    // which returns it formatted for insertion into compose box
-                    if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                        try {
-                            console.log('Submitting to bot handler with message:', message);
+                    try {
+                        // Approach 1: Try using Teams SDK's undocumented text insertion
+                        if (typeof microsoftTeams !== 'undefined') {
+                            console.log('Attempting Teams SDK text insertion methods...');
 
-                            // Submit the message to the bot handler
-                            // The bot will process and return it for insertion
-                            microsoftTeams.tasks.submitTask({
-                                message: message,
-                                text: message
-                            });
+                            // Try method 1: Submit with text property
+                            try {
+                                await microsoftTeams.tasks.submitTask(message);
+                                document.getElementById('copyStatus').innerHTML = '✅ Inserted! Closing...';
+                                console.log('✅ Text submitted via submitTask(string)');
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                                return;
+                            } catch (e) {
+                                console.log('Method 1 failed:', e);
+                            }
 
-                            console.log('✅ Message submitted to bot - should auto-insert into compose box');
+                            // Try method 2: Use execCommand to paste
+                            try {
+                                // Copy to clipboard
+                                await navigator.clipboard.writeText(message);
 
-                            // Update status
-                            document.getElementById('copyStatus').innerHTML = '✅ Inserted into chat!';
-                        } catch (error) {
-                            console.error('Submit failed:', error);
-                            document.getElementById('copyStatus').innerHTML = '❌ Auto-insert failed - message copied to clipboard';
+                                // Try to trigger paste event programmatically
+                                const pasteEvent = new ClipboardEvent('paste', {
+                                    clipboardData: new DataTransfer(),
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+                                pasteEvent.clipboardData.setData('text/plain', message);
+                                document.dispatchEvent(pasteEvent);
+
+                                console.log('Clipboard and paste event dispatched');
+                            } catch (e) {
+                                console.log('Clipboard method failed:', e);
+                            }
+
+                            // Update UI and close after copying
+                            document.getElementById('copyStatus').innerHTML = '📋 Copied! Paste in chat after closing';
+                            console.log('Copied to clipboard, closing modal...');
+
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                            microsoftTeams.tasks.submitTask(null);
+                        } else {
+                            window.close();
                         }
-                    } else {
-                        console.log('Teams SDK not available, closing window');
-                        window.close();
+                    } catch (error) {
+                        console.error('All methods failed:', error);
+                        document.getElementById('copyStatus').innerHTML = '📋 Copied! Paste manually in chat';
+
+                        // Still close the modal
+                        setTimeout(() => {
+                            if (microsoftTeams && microsoftTeams.tasks) {
+                                microsoftTeams.tasks.submitTask(null);
+                            } else {
+                                window.close();
+                            }
+                        }, 2000);
                     }
                 });
             }
