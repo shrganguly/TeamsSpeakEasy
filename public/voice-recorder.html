@@ -422,7 +422,7 @@
         
         <!-- Version Display -->
         <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            🎤 Speak Easy v1.0.27 | Enhanced Copy
+            🎤 Speak Easy v1.0.28 | Manual Copy
         </div>
     </div>
 
@@ -894,19 +894,17 @@
                         <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
                             <strong>📝 How to use:</strong><br>
                             <div style="margin-top: 8px; font-size: 13px; line-height: 1.4;">
-                                1. <strong>Close this window</strong> (click X or press Escape)<br>
-                                2. <strong>Click in the Teams chat box</strong><br>
-                                3. <strong>Paste with Ctrl+V</strong><br>
-                                4. <strong>Press Enter to send</strong>
+                                1. <strong>Click "📋 Copy Message" button below</strong><br>
+                                2. <strong>Close this window</strong> (X button or Escape)<br>
+                                3. <strong>Click in Teams chat box</strong><br>
+                                4. <strong>Paste with Ctrl+V or Cmd+V</strong><br>
+                                5. <strong>Press Enter to send</strong>
                             </div>
                         </div>
-                        
+
                         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                            <button id="manualCopyBtn" class="action-button" style="background: #6264A7; color: white; padding: 12px 20px; font-weight: bold;">
-                                � Copy Again
-                            </button>
-                            <button id="closeBtn" class="action-button" style="background: #28a745; color: white; padding: 12px 20px;">
-                                ✅ Close & Paste
+                            <button id="manualCopyBtn" class="action-button" style="background: #6264A7; color: white; padding: 15px 25px; font-weight: bold; font-size: 16px;">
+                                📋 Copy Message
                             </button>
                         </div>
                         
@@ -922,52 +920,40 @@
                 // Add event listeners
                 document.getElementById('manualCopyBtn').addEventListener('click', async () => {
                     const textarea = document.getElementById('finalMessageText');
+                    let copied = false;
 
+                    // Try multiple copy methods
                     try {
-                        // First try clipboard API
+                        // Method 1: Clipboard API
                         await navigator.clipboard.writeText(message);
-                        document.getElementById('copyStatus').innerHTML = '✅ Copied! Now paste in Teams chat.';
-                        document.getElementById('manualCopyBtn').textContent = '✅ Copied!';
-
-                        // Also select the text for visual feedback
-                        textarea.select();
-                        textarea.setSelectionRange(0, textarea.value.length);
+                        copied = true;
+                        console.log('✅ Copied via Clipboard API');
                     } catch (error) {
-                        console.log('Clipboard API failed, trying manual selection:', error);
+                        console.log('Clipboard API failed, trying execCommand:', error);
 
-                        // Fallback: Select text and try execCommand
+                        // Method 2: execCommand with the visible textarea
                         try {
                             textarea.select();
                             textarea.setSelectionRange(0, textarea.value.length);
-                            document.execCommand('copy');
-                            document.getElementById('copyStatus').innerHTML = '✅ Copied! Now paste in Teams chat.';
-                            document.getElementById('manualCopyBtn').textContent = '✅ Copied!';
+                            copied = document.execCommand('copy');
+                            console.log('execCommand result:', copied);
                         } catch (execError) {
-                            // Last resort: just select the text for manual copy
-                            textarea.select();
-                            textarea.setSelectionRange(0, textarea.value.length);
-                            document.getElementById('copyStatus').innerHTML = '📋 Text selected - tap "Copy" in menu';
-                            document.getElementById('manualCopyBtn').textContent = '📋 Text Selected';
+                            console.log('execCommand failed:', execError);
                         }
                     }
-                });
-                
-                document.getElementById('closeBtn').addEventListener('click', async () => {
-                    console.log('=== CLOSE CLICKED ===');
-                    console.log('Message already in clipboard:', message);
-                    console.log('Mode: fetchTask: false - clipboard workflow for plain text');
 
-                    // Message is already copied to clipboard from showResult()
-                    // Just close the window so user can paste
-                    document.getElementById('copyStatus').innerHTML = '✅ Ready to paste! Close this window and paste in chat.';
-
-                    setTimeout(() => {
-                        if (typeof microsoftTeams !== 'undefined' && microsoftTeams.tasks) {
-                            microsoftTeams.tasks.submitTask(null);
-                        } else {
-                            window.close();
-                        }
-                    }, 500);
+                    // Update UI based on result
+                    if (copied) {
+                        document.getElementById('copyStatus').innerHTML = '✅ <strong>Copied successfully!</strong> Close this window and paste in Teams chat.';
+                        document.getElementById('manualCopyBtn').innerHTML = '✅ Copied!';
+                        document.getElementById('manualCopyBtn').style.background = '#28a745';
+                    } else {
+                        // Show textarea for manual selection
+                        textarea.select();
+                        textarea.setSelectionRange(0, textarea.value.length);
+                        document.getElementById('copyStatus').innerHTML = '📋 Text selected - use right-click menu to copy, or press Ctrl+C';
+                        document.getElementById('manualCopyBtn').textContent = '📋 Text Selected';
+                    }
                 });
             }
             
